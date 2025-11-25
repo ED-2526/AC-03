@@ -16,12 +16,22 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.metrics import AUC
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
-# --- 1. CARGA DE DATOS ---
-# Usaremos el dataset de 3 segundos para tener más datos (10,000 filas)
-features_path = r'C:\Users\ikerb\.cache\kagglehub\datasets\andradaolteanu\gtzan-dataset-music-genre-classification\versions\1\Data\features_3_sec.csv'
-df = pd.read_csv(features_path)
+# --- 1. CARGA DE DATOS (MODIFICADO PARA SER DINÁMICO) ---
+# Detectamos dónde está este archivo de código ejecutándose
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
-print("Datos cargados. Tamaño:", df.shape)
+# Construimos la ruta relativa a la carpeta 'Data'
+features_path = os.path.join(current_dir, 'Data', 'features_3_sec.csv')
+
+# Verificamos si existe antes de cargar (para evitar errores feos)
+if not os.path.exists(features_path):
+    print(f"❌ Error: No encuentro el archivo en: {features_path}")
+    print("Asegúrate de que la carpeta 'Data' está en el mismo lugar que este script.")
+    exit()
+
+df = pd.read_csv(features_path)
+print(f"✅ Datos cargados correctamente desde: {features_path}")
+print("Tamaño:", df.shape)
 
 # --- 2. PREPROCESAMIENTO ---
 
