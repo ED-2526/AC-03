@@ -19,7 +19,7 @@ import seaborn as sns
 # ============================================================
 # 0. CREAR CARPETA DE GUARDADO DE PLOTS
 # ============================================================
-plot_dir = os.path.join(os.getcwd(), "Plots")
+plot_dir = os.path.join(os.getcwd(), "Plots_KNN")
 os.makedirs(plot_dir, exist_ok=True)
 
 # ============================================================
