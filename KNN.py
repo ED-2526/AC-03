@@ -16,42 +16,27 @@ from scipy.stats import randint
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# ============================================================
-# 0. CREAR CARPETA DE GUARDADO DE PLOTS
-# ============================================================
-plot_dir = os.path.join(os.getcwd(), "Plots_KNN")
+#import os
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+# --- IMPORTAR TU NUEVO MÓDULO ---
+from carrega_dades import cargar_y_preprocesar_datos
+
+# 0. CONFIGURACIÓN
+plot_dir = os.path.join(os.getcwd(), "Plots_RF")
 os.makedirs(plot_dir, exist_ok=True)
 
-# ============================================================
-# 1. CARGA DE DATOS
-# ============================================================
-current_dir = os.path.dirname(os.path.abspath(__file__))
-features_path = os.path.join(current_dir, 'Data', 'features_3_sec.csv')
-
-if not os.path.exists(features_path):
-    print(f"❌ Error: No encuentro el archivo en: {features_path}")
+# 1. CARGA Y PREPROCESAMIENTO
+try:
+    X_train, X_test, y_train, y_test, label_encoder, scaler = cargar_y_preprocesar_datos()
+    class_names = label_encoder.classes_
+except Exception as e:
+    print(e)
     exit()
 
-df = pd.read_csv(features_path)
-print(f"✅ Datos cargados correctamente desde: {features_path}")
-print("Tamaño:", df.shape)
-
-# ============================================================
-# 2. PREPROCESAMIENTO
-# ============================================================
-X = df.drop(columns=['filename', 'length', 'label'])
-y = df['label']
-
-label_encoder = LabelEncoder()
-y_encoded = label_encoder.fit_transform(y)
-
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded
-)
-
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
 
 # ============================================================
 # 3. KNN

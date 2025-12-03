@@ -16,44 +16,27 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.metrics import AUC
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
-# --- 1. CARGA DE DATOS (MODIFICADO PARA SER DINÁMICO) ---
-# Detectamos dónde está este archivo de código ejecutándose
-current_dir = os.path.dirname(os.path.abspath(__file__))
+import numpy as np
+from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.models import Sequential
+# ... imports de keras ...
 
-# Construimos la ruta relativa a la carpeta 'Data'
-features_path = os.path.join(current_dir, 'Data', 'features_3_sec.csv')
+# --- IMPORTAR TU NUEVO MÓDULO ---
+from carrega_dades import cargar_y_preprocesar_datos
 
-# Verificamos si existe antes de cargar (para evitar errores feos)
-if not os.path.exists(features_path):
-    print(f"❌ Error: No encuentro el archivo en: {features_path}")
-    print("Asegúrate de que la carpeta 'Data' está en el mismo lugar que este script.")
-    exit()
+# 1. CARGA BASE
+X_train, X_test, y_train, y_test, label_encoder, scaler = cargar_y_preprocesar_datos()
 
-df = pd.read_csv(features_path)
-print(f"✅ Datos cargados correctamente desde: {features_path}")
-print("Tamaño:", df.shape)
+# 2. ADAPTACIÓN ESPECÍFICA PARA LSTM
+# Reshape a 3D: (Samples, TimeSteps, Features)
+X_train_reshaped = X_train.reshape(X_train.shape[0], 1, X_train.shape[1])
+X_test_reshaped = X_test.reshape(X_test.shape[0], 1, X_test.shape[1])
 
-# --- 2. PREPROCESAMIENTO ---
+# One-Hot Encoding para el target
+y_train_cat = to_categorical(y_train)
+y_test_cat = to_categorical(y_test)
 
-# Eliminar columnas que no son características de audio útiles para el modelo
-# 'filename' es texto, 'length' es constante en este csv
-X = df.drop(columns=['filename', 'length', 'label'])
-y = df['label']
-
-# Codificar las etiquetas (de texto "jazz" a números 0, 1, 2...)
-label_encoder = LabelEncoder()
-y_encoded = label_encoder.fit_transform(y)
-
-# Dividir en Train y Test (80% / 20%)
-# Stratify asegura que haya la misma cantidad de cada género en ambos grupos
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded
-)
-
-# Escalar los datos (IMPORTANTE: fit solo en train)
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
+# ... A partir de aquí defines tu modelo Sequential ...
 
 # --- 3. ADAPTACIÓN PARA LSTM ---
 # LSTM necesita entrada 3D: (Muestras, Pasos de tiempo, Características)

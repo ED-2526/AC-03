@@ -1,92 +1,67 @@
-import pandas as pd
-import numpy as np
 import os
-import matplotlib.pyplot as plt # Importar matplotlib
-import seaborn as sns # Importar seaborn para la matriz de confusión
-
-# --- Librerías de Machine Learning y Preprocesamiento (Scikit-learn) ---
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, precision_recall_fscore_support
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, precision_recall_fscore_support
+import numpy as np
+import pandas as pd
+# --- IMPORTAR TU NUEVO MÓDULO ---
+from carrega_dades import cargar_y_preprocesar_datos
 
-# ============================================================
-# 0. CREAR CARPETA DE GUARDADO DE PLOTS
-# ============================================================
-plot_dir = os.path.join(os.getcwd(), "Plots_RF") # Carpeta específica para RF
+# 0. CONFIGURACIÓN
+plot_dir = os.path.join(os.getcwd(), "Plots_RF")
 os.makedirs(plot_dir, exist_ok=True)
-print(f"✅ Carpeta de plots creada/verificada en: {plot_dir}")
 
-# --- 1. CARGA DE DATOS (Igual) ---
-current_dir = os.path.dirname(os.path.abspath(__file__))
-#features_path = os.path.join(current_dir, 'Data', 'features_30_sec.csv') 
-features_path = os.path.join(current_dir, 'Data', 'features_3_sec.csv')
-
-
-if not os.path.exists(features_path):
-    print(f"❌ Error: No encuentro el archivo en: {features_path}")
-    print("Asegúrate de que la carpeta 'Data' está en el mismo lugar que este script.")
+# 1. CARGA Y PREPROCESAMIENTO (¡Solo una línea!)
+try:
+    X_train, X_test, y_train, y_test, label_encoder, scaler = cargar_y_preprocesar_datos()
+    class_names = label_encoder.classes_
+except Exception as e:
+    print(e)
     exit()
 
-df = pd.read_csv(features_path)
-print(f"✅ Datos cargados correctamente desde: {features_path}")
-print("Tamaño:", df.shape)
-
-# --- 2. PREPROCESAMIENTO (Igual) ---
-
-# Eliminar columnas
-X = df.drop(columns=['filename', 'length', 'label'])
-y = df['label']
-
-# Codificar las etiquetas
-label_encoder = LabelEncoder()
-y_encoded = label_encoder.fit_transform(y)
-class_names = label_encoder.classes_ # Obtener nombres de las clases para los plots
-
-# Dividir en Train y Test
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded
-)
-
-# Escalar los datos
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
 
 # --- 3. Generación del Gráfico de Distribució de Clases ---
 
-print("\n--- 3. Generación del Gráfico de Distribució de Clases ---")
+print("\n--- 3. Generación del Gráfico de Distribución de Clases ---")
 
-# Obtenemos la variable objetivo antes del 'train_test_split'
-y_labels = df['label']
+# CORRECCIÓN: Como ya no tenemos 'df', reconstruimos las etiquetas totales
+# 1. Unimos las etiquetas de entrenamiento y test
+y_total_encoded = np.concatenate([y_train, y_test])
 
-# 1. Contar la frecuencia de cada género
+# 2. Las convertimos de números (0, 1...) a nombres ('blues', 'classical'...)
+y_total_names = label_encoder.inverse_transform(y_total_encoded)
+
+# 3. Convertimos a Pandas Series para poder usar value_counts() fácilmente
+y_labels = pd.Series(y_total_names)
+
+# 4. Contar la frecuencia (Igual que antes)
 class_counts = y_labels.value_counts().sort_index()
 
-# 2. Crear el gráfico de barres
+# 5. Crear el gráfico de barras
 plt.figure(figsize=(12, 6))
 class_counts.plot(kind='bar', color='darkgreen')
 
-# 3. Títulos y etiquetas
-plt.title('Distribución de Géneros Musicales (Classes) para el Análisis de Homogeneidad', fontsize=14)
+# Títulos y etiquetas
+plt.title('Distribución de Géneros Musicales (Total Dataset)', fontsize=14)
 plt.xlabel('Género Musical', fontsize=12)
 plt.ylabel('Número de Muestras', fontsize=12)
 
-# 4. Ajustes de visualización
+# Ajustes visuales
 plt.xticks(rotation=45, ha='right')
 plt.grid(axis='y', linestyle='--', alpha=0.6)
 
-# Afegir valors a sobre de les barres
+# Poner valores sobre las barras
 for index, value in enumerate(class_counts):
     plt.text(index, value, f'{value}', ha='center', va='bottom', fontsize=10)
 
 plt.tight_layout()
 
-# 5. Guardar la figura
-output_file = os.path.join(plot_dir, 'rf_class_distribution_bar_chart.png') # Nombre específico
+# Guardar
+output_file = os.path.join(plot_dir, 'rf_class_distribution_bar_chart.png')
 plt.savefig(output_file)
-print(f"✅ Gráfico de distribución guardado como a '{output_file}'")
-plt.close() # Cerrar la figura para liberar memoria
+print(f"✅ Gráfico de distribución guardado en '{output_file}'")
+plt.close()
 
 # --- 4. DEFINICIÓN, ENTRENAMIENTO Y EVALUACIÓN DEL MODELO ---
 
