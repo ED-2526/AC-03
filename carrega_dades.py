@@ -3,8 +3,9 @@ import numpy as np
 import os
 from sklearn.model_selection import GroupShuffleSplit
 from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.model_selection import train_test_split
 
-def cargar_y_preprocesar_datos(filepath=None, test_size=0.2, random_state=42):
+def cargar_y_preprocesar_datos_3s(filepath=None, test_size=0.2, random_state=42):
     """
     Carga los datos, soluciona el Data Leakage agrupando por canción,
     escala los features y codifica los labels.
@@ -67,10 +68,44 @@ def cargar_y_preprocesar_datos(filepath=None, test_size=0.2, random_state=42):
 
     return X_train, X_test, y_train, y_test, le, scaler
 
+def cargar_y_preprocesar_datos_30s(filepath=None, test_size=0.2, random_state=42):
+    # 1. Gestión de la ruta del archivo
+    if filepath is None:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        filepath = os.path.join(current_dir, 'Data', 'features_30_sec.csv')
+
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"❌ No se encontró el archivo en: {filepath}")
+
+    print(f"✅ Cargando datos desde: {filepath}")
+    df = pd.read_csv(filepath)
+
+    # 2. Separar Features y Target
+    # Eliminamos columnas que no sirven para predecir
+    X = df.drop(columns=['filename', 'length', 'label'])
+    y = df['label']
+
+    # 3. Codificar Etiquetas (String -> Número)
+    le = LabelEncoder()
+    y_encoded = le.fit_transform(y)
+
+    # 4. SPLIT (train_test_split)
+    X_train_raw, X_test_raw, y_train, y_test = train_test_split(
+        X, y_encoded, test_size=test_size, random_state=random_state, stratify=y_encoded
+    )
+
+    # 5. Escalado (StandardScaler)
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train_raw)
+    X_test = scaler.transform(X_test_raw)
+
+    print(f"✅ Datos procesados. Train shape: {X_train.shape}, Test shape: {X_test.shape}")
+    return X_train, X_test, y_train, y_test, le, scaler
+
 if __name__ == "__main__":
     # Bloque de prueba para cuando ejecutes este script solo
     try:
-        X_tr, X_te, y_tr, y_te, le, sc = cargar_y_preprocesar_datos()
+        X_tr, X_te, y_tr, y_te, le, sc = cargar_y_preprocesar_datos_3s()
         print("Prueba exitosa.")
     except Exception as e:
         print(f"Error en la prueba: {e}")

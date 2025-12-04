@@ -6,7 +6,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 import numpy as np
 import pandas as pd
 # --- IMPORTAR TU NUEVO MÓDULO ---
-from carrega_dades import cargar_y_preprocesar_datos
+from carrega_dades import *
 
 # 0. CONFIGURACIÓN
 plot_dir = os.path.join(os.getcwd(), "Plots_RF")
@@ -14,7 +14,8 @@ os.makedirs(plot_dir, exist_ok=True)
 
 # 1. CARGA Y PREPROCESAMIENTO (¡Solo una línea!)
 try:
-    X_train, X_test, y_train, y_test, label_encoder, scaler = cargar_y_preprocesar_datos()
+    X_train, X_test, y_train, y_test, label_encoder, scaler = cargar_y_preprocesar_datos_3s() # Per a 3 segons
+    #X_train, X_test, y_train, y_test, label_encoder, scaler = cargar_y_preprocesar_datos_30s() # Per a 30 segons
     class_names = label_encoder.classes_
 except Exception as e:
     print(e)
