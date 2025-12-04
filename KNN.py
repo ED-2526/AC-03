@@ -12,9 +12,8 @@ from sklearn.metrics import (
 from sklearn.neighbors import KNeighborsClassifier
 from scipy.stats import randint
 
-# Librerías visualización
-import matplotlib.pyplot as plt
-import seaborn as sns
+# Modulo de visualización
+from Plots import *
 
 #import os
 import matplotlib.pyplot as plt
@@ -25,9 +24,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 # --- IMPORTAR TU NUEVO MÓDULO ---
 from carrega_dades import *
 
-# 0. CONFIGURACIÓN
-plot_dir = os.path.join(os.getcwd(), "Plots_KNN")
-os.makedirs(plot_dir, exist_ok=True)
+MODEL = "KNN"
 
 # 1. CARGA Y PREPROCESAMIENTO
 try:
@@ -69,10 +66,17 @@ print(f"✔️ Mejor modelo encontrado: {best_knn}")
 # 4. EVALUACIÓN
 # ============================================================
 y_pred_test = best_knn.predict(X_test)
-test_accuracy = accuracy_score(y_test, y_pred_test)
+
+try:
+    y_prob_test = best_knn.predict_proba(X_test)
+except AttributeError:
+    y_prob_test = None
+    print("El modelo no soporta predict_proba(). No se podrán generar curvas ROC/PR.")
 
 y_pred_train = best_knn.predict(X_train)
+
 train_accuracy = accuracy_score(y_train, y_pred_train)
+test_accuracy = accuracy_score(y_test, y_pred_test)
 
 print("\n📊 RESULTADOS KNN")
 print("Train Accuracy:", train_accuracy)
@@ -102,53 +106,26 @@ print(f"F1 Score: {f1:.4f}")
 # ============================================================
 # 7. PER-CLASS METRICS (precision, recall, f1)
 # ============================================================
-p_per_class, r_per_class, f1_per_class, _ = precision_recall_fscore_support(
-    y_test, y_pred_test
-)
 
-plt.figure(figsize=(12, 6))
-x = np.arange(len(class_names))
-width = 0.25
-
-plt.bar(x - width, p_per_class, width, label='Precision')
-plt.bar(x, r_per_class, width, label='Recall')
-plt.bar(x + width, f1_per_class, width, label='F1-score')
-
-plt.xticks(x, class_names, rotation=45)
-plt.ylabel("Score")
-plt.title("Per-Class Metrics (KNN)")
-plt.legend()
-plt.tight_layout()
-
-# 👉 Guardar gráfico
-plt.savefig(os.path.join(plot_dir, "per_class_metrics_knn.png"))
-plt.close()
+plot_per_class_metrics(y_test, y_pred_test, class_names, MODEL)
 
 # ============================================================
 # 8. CONFUSION MATRIX
 # ============================================================
-cm = confusion_matrix(y_test, y_pred_test)
 
-plt.figure(figsize=(10, 8))
-sns.heatmap(cm, annot=True, fmt="d",
-            xticklabels=class_names,
-            yticklabels=class_names,
-            cmap="Blues")
-
-plt.xlabel("Predicho")
-plt.ylabel("Real")
-plt.title("Matriz de Confusión (KNN)")
-plt.tight_layout()
-
-# 👉 Guardar gráfico
-plt.savefig(os.path.join(plot_dir, "confusion_matrix_knn.png"))
-plt.close()
+plot_confusion_matrix(y_test, y_pred_test, class_names, MODEL)
 
 # ============================================================
-# 9. PREDICCIONES EJEMPLO
+# 9. CURVAS ROC
 # ============================================================
-print("\n🧪 Ejemplos de predicciones:")
-for i in range(10):
-    true_genre = label_encoder.inverse_transform([y_test[i]])[0]
-    pred_genre = label_encoder.inverse_transform([y_pred_test[i]])[0]
-    print(f"Real: {true_genre} | Predicho: {pred_genre}")
+
+if y_prob_test is not None:
+    plot_roc_curve(y_test, y_prob_test, MODEL, class_names)
+
+# ============================================================
+# 10. CURVAS PRECISION-RECALL
+# ============================================================
+
+if y_prob_test is not None:
+    plot_precision_recall_curve(y_test, y_prob_test, MODEL, class_names)
+

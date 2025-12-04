@@ -1,17 +1,13 @@
 import os
-import matplotlib.pyplot as plt
-import seaborn as sns
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, precision_recall_fscore_support
 import numpy as np
 import pandas as pd
 # --- IMPORTAR TU NUEVO MÓDULO ---
 from carrega_dades import *
+from Plots import *
 
-# 0. CONFIGURACIÓN
-plot_dir = os.path.join(os.getcwd(), "Plots_RF")
-os.makedirs(plot_dir, exist_ok=True)
-
+MODEL = "Random Forest"
 # 1. CARGA Y PREPROCESAMIENTO (¡Solo una línea!)
 try:
     X_train, X_test, y_train, y_test, label_encoder, scaler = cargar_y_preprocesar_datos_3s() # Per a 3 segons
@@ -59,7 +55,7 @@ for index, value in enumerate(class_counts):
 plt.tight_layout()
 
 # Guardar
-output_file = os.path.join(plot_dir, 'rf_class_distribution_bar_chart.png')
+output_file = 'rf_class_distribution_bar_chart.png'
 plt.savefig(output_file)
 print(f"✅ Gráfico de distribución guardado en '{output_file}'")
 plt.close()
@@ -82,6 +78,11 @@ print("✅ Entrenamiento finalizado.")
 
 # 4.3. Predicción
 y_pred = model.predict(X_test) # ESTE ES EL RETORNO PRINCIPAL: numpy array de clases predichas
+try:
+    y_prob_test = model.predict_proba(X_test)
+except AttributeError:
+    y_prob_test = None
+    print("El modelo no soporta predict_proba(). No se podrán generar curvas ROC/PR.")
 
 # 4.4. Evaluación
 print("\n--- 5. RESULTADOS DE LA EVALUACIÓN ---")
@@ -89,6 +90,8 @@ print("\n--- 5. RESULTADOS DE LA EVALUACIÓN ---")
 accuracy = accuracy_score(y_test, y_pred)
 print(f"Precisión (Accuracy) en el conjunto de prueba: {accuracy*100:.2f}%")
 
+print("\nReporte de Clasificación:")
+print(classification_report(y_test, y_pred, target_names=class_names, zero_division=0))
 # ============================================================
 # 6. GRÁFICOS ADICIONALES PARA RANDOM FOREST
 # ============================================================
@@ -96,46 +99,19 @@ print(f"Precisión (Accuracy) en el conjunto de prueba: {accuracy*100:.2f}%")
 print("\n--- Generando gráficos adicionales para Random Forest ---")
 
 # --- 6.1. Per-Class Metrics (precision, recall, f1) ---
-p_per_class, r_per_class, f1_per_class, _ = precision_recall_fscore_support(
-    y_test, y_pred, average=None # Importante: average=None para métricas por clase
-)
 
-plt.figure(figsize=(12, 6))
-x = np.arange(len(class_names))
-width = 0.25
-
-plt.bar(x - width, p_per_class, width, label='Precision')
-plt.bar(x, r_per_class, width, label='Recall')
-plt.bar(x + width, f1_per_class, width, label='F1-score')
-
-plt.xticks(x, class_names, rotation=45)
-plt.ylabel("Score")
-plt.title("Métricas por Clase (Random Forest)")
-plt.legend()
-plt.tight_layout()
-
-# 👉 Guardar gráfico
-plt.savefig(os.path.join(plot_dir, "rf_per_class_metrics.png"))
-print(f"✅ Gráfico de métricas por clase guardado como: '{os.path.join(plot_dir, 'rf_per_class_metrics.png')}'")
-plt.close()
+plot_per_class_metrics(y_test, y_pred, class_names, MODEL)
 
 # --- 6.2. Confusion Matrix ---
-cm = confusion_matrix(y_test, y_pred)
 
-plt.figure(figsize=(10, 8))
-sns.heatmap(cm, annot=True, fmt="d",
-            xticklabels=class_names,
-            yticklabels=class_names,
-            cmap="Blues")
+plot_confusion_matrix(y_test, y_pred, class_names, MODEL)
 
-plt.xlabel("Predicho")
-plt.ylabel("Real")
-plt.title("Matriz de Confusión (Random Forest)")
-plt.tight_layout()
+# --- 6.3. ROC Curve ---
 
-# 👉 Guardar gráfico
-plt.savefig(os.path.join(plot_dir, "rf_confusion_matrix.png"))
-print(f"✅ Gráfico de matriz de confusión guardado como: '{os.path.join(plot_dir, 'rf_confusion_matrix.png')}'")
-plt.close()
+if y_prob_test is not None:
+    plot_roc_curve(y_test, y_prob_test, MODEL, class_names)
 
-print("\n--- Ejecución del script Random Forest finalizada ---")
+# --- 6.4. Precision-Recall Curve ---
+
+if y_prob_test is not None:
+    plot_precision_recall_curve(y_test, y_prob_test, MODEL, class_names)
