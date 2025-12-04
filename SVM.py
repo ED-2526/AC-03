@@ -9,7 +9,7 @@ from sklearn.metrics import classification_report, confusion_matrix, accuracy_sc
 from carrega_dades import *
 from Plots import *
 
-MODEL = "SVC"
+MODEL = "SVM"
 
 ### 1. Carrega i Preprocessament de les Dades
 try:
@@ -31,9 +31,9 @@ print("="*50)
 # Inicialitzar el model SVC
 # Valors inicials: C=1.0 i gamma='scale' (basat en l'escalat Standard)
 svc_model = SVC(
-    C=1.0, 
+    C=10.0, 
     kernel='rbf', 
-    gamma='scale', 
+    gamma=0.01, 
     probability=True, # Necessari per obtenir probabilitats en la predicció
     random_state=42, 
     verbose=True # Per veure el progrés de l'entrenament
