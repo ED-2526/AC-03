@@ -36,31 +36,17 @@ except Exception as e:
     exit()
 
 
-# ============================================================
-# 3. KNN
-# ============================================================
-print("\n🔍 Buscando mejores hiperparámetros para KNN...")
+# ========================================================================================================================
+# 3. ENTRENAMIENTO KNN CON PARAMETROS ÓPTIMOS DE ELBOW CURVE (ENCONTRADOS ANTES EJECUTANDO Elbow Curve.py)
+# ========================================================================================================================
+print("\n🤖 Entrenando KNN con mejores hiperparámetros encontrados...")
+best_k = 4  # Reemplaza con el mejor K encontrado
+best_weights = 'distance'  # Reemplaza con el mejor peso encontrado ('uniform' o 'distance')
+best_p = 1  # Reemplaza con el mejor p encontrado (1 para Manhattan, 2 para Euclidean)
+print(f"Mejores hiperparámetros: K={best_k}, weights='{best_weights}', p={best_p}")
 
-param_grid = {
-    'n_neighbors': randint(1, 15),
-    'weights': ['uniform', 'distance'],
-    'p': [1, 2]
-}
-
-knn = KNeighborsClassifier()
-
-random_search_knn = RandomizedSearchCV(
-    knn,
-    param_distributions=param_grid,
-    n_iter=10,
-    cv=5,
-    random_state=42
-)
-
-random_search_knn.fit(X_train, y_train)
-best_knn = random_search_knn.best_estimator_
-
-print(f"✔️ Mejor modelo encontrado: {best_knn}")
+best_knn = KNeighborsClassifier(n_neighbors=best_k, weights=best_weights, p=best_p)
+best_knn.fit(X_train, y_train)
 
 # ============================================================
 # 4. EVALUACIÓN
