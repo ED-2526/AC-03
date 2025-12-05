@@ -3,12 +3,11 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, precision_recall_fscore_support
 import numpy as np
 import pandas as pd
-# --- IMPORTAR TU NUEVO MÓDULO ---
 from carrega_dades import *
 from Plots import *
 
 MODEL = "Random Forest"
-# 1. CARGA Y PREPROCESAMIENTO (¡Solo una línea!)
+# 1. CARGA Y PREPROCESAMIENTO 
 try:
     X_train, X_test, y_train, y_test, label_encoder, scaler = cargar_y_preprocesar_datos_3s() # Per a 3 segons
     #X_train, X_test, y_train, y_test, label_encoder, scaler = cargar_y_preprocesar_datos_30s() # Per a 30 segons
@@ -66,9 +65,12 @@ print("\n--- 4. ENTRENAMIENTO DE RANDOM FOREST ---")
 
 # 4.1. Definición del Model
 model = RandomForestClassifier(
-    n_estimators=100,
-    random_state=42,
-    n_jobs=-1
+    n_estimators=200,       # Abans: 100, Ara: 200
+    max_depth=20,             # S'afegeix la profunditat màxima: 20
+    min_samples_split=2, # S'afegeix el mínim de mostres per a la divisió: 2
+    
+    random_state=42, # Mantens la llavor per a la reproductibilitat
+    n_jobs=-1        # Mantens l'ús de tots els nuclis
 )
 
 # 4.2. Entrenamiento
