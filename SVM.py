@@ -29,7 +29,6 @@ print("     🚀 Iniciant l'Entrenament del Model SVC")
 print("="*50)
 
 # Inicialitzar el model SVC
-# Valors inicials: C=1.0 i gamma='scale' (basat en l'escalat Standard)
 svc_model = SVC(
     C=10.0, 
     kernel='rbf', 
@@ -48,7 +47,7 @@ print("\n✅ Entrenament del SVC finalitzat.")
 ### 3. Avaluació del Model
 
 # Predicció sobre el conjunt de test (dades no vistes)
-y_pred = svc_model.predict(X_test)
+y_pred_te = svc_model.predict(X_test)
 
 # Obtenció dels noms de les classes originals per a l'informe
 class_names = label_encoder.classes_
@@ -59,28 +58,30 @@ except AttributeError:
     y_prob_test = None
     print("El modelo no soporta predict_proba(). No se podrán generar curvas ROC/PR.")
 
+y_pred_tr = svc_model.predict(X_train)
 
 print("\n" + "="*50)
 print("             📊 Avaluació del Model SVC")
-print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Accuracy:", accuracy_score(y_train, y_pred_tr))
+print("Accuracy:", accuracy_score(y_test, y_pred_te))
 print("="*50)
 
 # Informe de Classificació (mètriques clau)
 print("\nInforme de Classificació (Precision, Recall, F1-Score):")
-print(classification_report(y_test, y_pred, target_names=class_names))
+print(classification_report(y_test, y_pred_te, target_names=class_names))
 
 # Matriu de Confusió
 print("\nMatriu de Confusió:")
-conf_matrix = confusion_matrix(y_test, y_pred)
+conf_matrix = confusion_matrix(y_test, y_pred_te)
 print(conf_matrix)
 
 # Generació de Gràfics per a l'Avaluació del Model
 
 # Gràfic de Mètriques per Classe
-plot_per_class_metrics(y_test, y_pred, class_names, MODEL)
+plot_per_class_metrics(y_test, y_pred_te, class_names, MODEL)
 
 # Matriu de Confusió
-plot_confusion_matrix(y_test, y_pred, class_names, MODEL)
+plot_confusion_matrix(y_test, y_pred_te, class_names, MODEL)
 
 # Corba ROC
 if y_prob_test is not None:

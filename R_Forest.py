@@ -100,8 +100,6 @@ print(classification_report(y_test, y_pred, target_names=class_names, zero_divis
 
 print("\n--- Generando gráficos adicionales para Random Forest ---")
 
-# --- 6.1. Per-Class Metrics (precision, recall, f1) ---
-
 plot_per_class_metrics(y_test, y_pred, class_names, MODEL)
 
 # --- 6.2. Confusion Matrix ---
