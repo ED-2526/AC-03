@@ -35,7 +35,6 @@ svc_model = SVC(
     gamma=0.01, 
     probability=True, # Necessari per obtenir probabilitats en la predicció
     random_state=42, 
-    verbose=True # Per veure el progrés de l'entrenament
 )
 
 # Entrenar el model amb les dades escalades

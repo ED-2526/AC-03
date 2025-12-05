@@ -57,7 +57,6 @@ def cargar_y_preprocesar_datos_3s(filepath=None, test_size=0.2, random_state=42)
     # 3. Tomar el segundo elemento (índice 1), que es el num_cancion: '00000'
     df['song_id'] = df['filename'].apply(lambda x: x.split('.')[1])
     
-    # Opcional: Combinar estilo + num_cancion para un ID único más robusto
     df['song_group'] = df['label'] + '_' + df['song_id']
     groups = df['song_group'] # Ahora agrupamos por esta columna
     
