@@ -49,9 +49,9 @@ def plot_grid_search_results(grid_search, save_path=None):
     if save_path:
         try:
             plt.savefig(save_path)
-            print(f"✅ Gràfic de Grid Search desat a: {save_path}")
+            print(f"Gràfic de Grid Search desat a: {save_path}")
         except Exception as e:
-            print(f"❌ Error al guardar el gràfic: {e}")
+            print(f"Error al guardar el gràfic: {e}")
 
 
 ### 1. Carrega i Preprocessament de les Dades
@@ -84,22 +84,13 @@ grid_search.fit(X_train, y_train)
 
 # 2.4. Resultats de l'Optimització
 print("\n" + "="*50)
-print("🏆 Millors Paràmetres Trobats:")
+print("Millors Paràmetres Trobats:")
 print(grid_search.best_params_)
 print("\nMillor Precisió (Accuracy) en Validació Creuada:")
 print(f"{grid_search.best_score_:.4f}")
 print("="*50)
 
-# 1. Definició de les variables de ruta
-NOM_GRÀFIC = 'resultats_grid_svm.png'
-CARPETA_PLOT = 'Plots'
-CARPETA_SVM = 'SVM'
 
-# 2. Creació de la ruta completa
-base_dir = os.path.dirname(os.path.abspath(__file__)) 
-directori_desti = os.path.join(base_dir, CARPETA_PLOT, CARPETA_SVM)
-path_complet_guardar = os.path.join(directori_desti, NOM_GRÀFIC)
-os.makedirs(directori_desti, exist_ok=True) 
 
-# 3. Cridar la funció per guardar
-plot_grid_search_results(grid_search, save_path=path_complet_guardar)
+GRAFIC_RF_PATH = './Plots/SVM/rf_grid_results.png' 
+plot_grid_search_results(grid_search, GRAFIC_RF_PATH)
