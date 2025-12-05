@@ -107,6 +107,7 @@ plot_confusion_matrix(y_test, y_pred_test, class_names, MODEL)
 
 if y_prob_test is not None:
     plot_roc_curve(y_test, y_prob_test, MODEL, class_names)
+    plot_general_roc_curve(y_test, y_prob_test, MODEL, class_names)
 
 # ============================================================
 # 10. CURVAS PRECISION-RECALL
@@ -114,4 +115,4 @@ if y_prob_test is not None:
 
 if y_prob_test is not None:
     plot_precision_recall_curve(y_test, y_prob_test, MODEL, class_names)
-
+    plot_general_pr_curve(y_test, y_prob_test, MODEL, class_names)

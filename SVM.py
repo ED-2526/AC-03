@@ -85,7 +85,9 @@ plot_confusion_matrix(y_test, y_pred, class_names, MODEL)
 # Corba ROC
 if y_prob_test is not None:
     plot_roc_curve(y_test, y_prob_test, MODEL, class_names)
+    plot_general_roc_curve(y_test, y_prob_test, MODEL, class_names)
 
 # Corba PR
 if y_prob_test is not None:
     plot_precision_recall_curve(y_test, y_prob_test, MODEL, class_names)
+    plot_general_pr_curve(y_test, y_prob_test, MODEL, class_names)
