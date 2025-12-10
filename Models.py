@@ -391,7 +391,6 @@ def executar_xgboost(X_train, X_test, y_train, y_test, label_encoder, data_type,
         'train_accuracy': train_accuracy,
         'f1_score': f1,
         'probabilities': y_prob_test,
-        'model_object': xgb_model # Retornamos el objeto por si quieres guardarlo
     }
 
 def executar_regressio_logistica(X_train, X_test, y_train, y_test, label_encoder, data_type, 
