@@ -286,10 +286,10 @@ from sklearn.metrics import accuracy_score, classification_report, precision_rec
 # Asegúrate de importar tus funciones de plot si están en otro archivo
 # from tus_plots import plot_feature_importances, plot_per_class_metrics, ...
 
-def executar_xgboost(X_train, X_test, y_train, y_test, label_encoder, data_type, 
-                     n_estimators=300, # Aumentamos un poco porque el learning rate es bajo
-                     max_depth=3,      # BAJADO: De 6 a 3 (Fundamental para evitar overfitting)
-                     learning_rate=0.03, # BAJADO: Más lento y seguro
+def executar_xgboost(X_train, X_test, y_train, y_test, label_encoder, scaler, data_type, 
+                     n_estimators=300, # Bajado de 500 a 300 ya que tarda menos y no pierde mucha precisión
+                     max_depth=2,      # BAJADO a 2 (para reducir el overfitting)
+                     learning_rate=0.05, # BAJADO: Más lento y seguro
                      random_state=42):
     """
     Entrena XGBoost con configuración 'Anti-Overfitting' agresiva.
@@ -297,11 +297,13 @@ def executar_xgboost(X_train, X_test, y_train, y_test, label_encoder, data_type,
     MODEL_NAME = f"XGBoost ({data_type})"
     class_names = label_encoder.classes_
     
-    # Reconstrucción de nombres de features
-    if hasattr(X_train, 'columns'):
-        feature_names = X_train.columns.tolist()
-    else:
-        feature_names = [f'feature_{i}' for i in range(X_train.shape[1])]
+    try:
+        if hasattr(scaler, 'feature_names_in_'):
+            feature_names = list(scaler.feature_names_in_)
+        else:
+            raise AttributeError
+    except:
+        feature_names = [f"Feature_{i}" for i in range(X_train.shape[1])]
     
     # 1. DEFINICIÓ I ENTRENAMENT AMB PARÀMETRES "ULTRA-CONSERVADORES"
     print(f"\n🚀 Iniciant l'Entrenament de {MODEL_NAME} (Mode Anti-Overfitting)...")
@@ -314,19 +316,19 @@ def executar_xgboost(X_train, X_test, y_train, y_test, label_encoder, data_type,
         # --- PARÁMETROS ANTI-OVERFITTING ---
         n_estimators=n_estimators,
         max_depth=max_depth,          # Profundidad 3: Evita relaciones muy complejas/memorización
-        learning_rate=learning_rate,  # 0.03: Aprendizaje lento
+        learning_rate=learning_rate,  # 0.05: Aprendizaje lento
         
-        min_child_weight=5,           # Exige al menos 5 muestras para crear una hoja
-        gamma=0.5,                    # Penalización alta para dividir nodos
-        subsample=0.6,                # Usa solo el 60% de las filas por árbol
-        colsample_bytree=0.6,         # Usa solo el 60% de las features por árbol
-        reg_lambda=2.0,               # Regularización L2 fuerte
+        gamma=5,                     # Requiere una reducción significativa de pérdida para hacer un split
+        min_child_weight=5,          # Al menos 5 muestras por hoja
+        subsample=0.8,                # Usa solo el 80% de las filas por árbol
+        colsample_bytree=0.8,         # Usa solo el 80% de las features por árbol
+        reg_alpha=2.0,               # Regularización L1 fuerte
         # -----------------------------------
         
-        random_state=random_state,
+        random_state=random_state, 
         n_jobs=-1,
         use_label_encoder=False,
-        early_stopping_rounds=20      # Parar si Test no mejora en 20 rondas
+        early_stopping_rounds=30      # Parar si Test no mejora en 30 rondas
     )
 
     # Pasamos eval_set para que el early_stopping funcione

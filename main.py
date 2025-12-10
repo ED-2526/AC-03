@@ -77,7 +77,7 @@ def main():
         '1': lambda: executar_knn(X_train, X_test, y_train, y_test, label_encoder, data_type, best_k=4, best_weights='distance', best_p=1),
         '2': lambda: executar_random_forest(X_train, X_test, y_train, y_test, label_encoder, data_type, n_estimators=250, max_depth=10, min_samples_split=2),
         '3': lambda: executar_svm(X_train, X_test, y_train, y_test, label_encoder, data_type, C=10.0, gamma=0.001),
-        '4': lambda: executar_xgboost(X_train, X_test, y_train, y_test, label_encoder, data_type),
+        '4': lambda: executar_xgboost(X_train, X_test, y_train, y_test, label_encoder, scaler, data_type),
         '5': lambda: executar_regressio_logistica(X_train, X_test, y_train, y_test, label_encoder, data_type),
         '6': lambda: executar_decision_tree(X_train, X_test, y_train, y_test, label_encoder, data_type),
         '7': lambda: executar_gmm_classifier(X_train, X_test, y_train, y_test, label_encoder, data_type),
