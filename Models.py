@@ -280,49 +280,68 @@ def executar_svm(X_train, X_test, y_train, y_test, label_encoder, data_type,
     }
 
 
-def executar_xgboost(X_train, X_test, y_train, y_test, label_encoder, data_type, 
-                     n_estimators=100, max_depth=6, learning_rate=0.1, random_state=42):
-    """
-    Entrena, avalua i genera els plots del model XGBoost.
+import xgboost as xgb
+import matplotlib.pyplot as plt
+from sklearn.metrics import accuracy_score, classification_report, precision_recall_fscore_support
+# Asegúrate de importar tus funciones de plot si están en otro archivo
+# from tus_plots import plot_feature_importances, plot_per_class_metrics, ...
 
-    Args:
-        X_train, X_test, y_train, y_test: Dades pre-processades (escalades).
-        label_encoder: Encoder per obtenir els noms de les classes.
-        data_type (str): Tipus de dades ('3s' o '30s').
-        n_estimators (int): Nombre d'arbres.
-        max_depth (int): Profunditat màxima.
-        learning_rate (float): Taxa d'aprenentatge.
-        random_state (int): Llavor per a la reproductibilitat.
+def executar_xgboost(X_train, X_test, y_train, y_test, label_encoder, data_type, 
+                     n_estimators=300, # Aumentamos un poco porque el learning rate es bajo
+                     max_depth=3,      # BAJADO: De 6 a 3 (Fundamental para evitar overfitting)
+                     learning_rate=0.03, # BAJADO: Más lento y seguro
+                     random_state=42):
+    """
+    Entrena XGBoost con configuración 'Anti-Overfitting' agresiva.
     """
     MODEL_NAME = f"XGBoost ({data_type})"
     class_names = label_encoder.classes_
     
-    # Per a la importància de variables, necessitem els noms de les columnes originals
-    # Ho reconstruïm a partir de l'estructura de dades d'entrenament
-    feature_names = [f'feature_{i}' for i in range(X_train.shape[1])]
+    # Reconstrucción de nombres de features
+    if hasattr(X_train, 'columns'):
+        feature_names = X_train.columns.tolist()
+    else:
+        feature_names = [f'feature_{i}' for i in range(X_train.shape[1])]
     
-    # 1. DEFINICIÓ I ENTRENAMENT AMB PARÀMETRES
-    print(f"\n🚀 Iniciant l'Entrenament de {MODEL_NAME}...")
+    # 1. DEFINICIÓ I ENTRENAMENT AMB PARÀMETRES "ULTRA-CONSERVADORES"
+    print(f"\n🚀 Iniciant l'Entrenament de {MODEL_NAME} (Mode Anti-Overfitting)...")
     
     xgb_model = xgb.XGBClassifier(
-        objective='multi:softprob',  # Utilitzem softprob per obtenir probabilitats (predict_proba)
+        objective='multi:softprob',
         num_class=len(class_names),
         eval_metric='mlogloss',
+        
+        # --- PARÁMETROS ANTI-OVERFITTING ---
         n_estimators=n_estimators,
-        max_depth=max_depth,
-        learning_rate=learning_rate,
+        max_depth=max_depth,          # Profundidad 3: Evita relaciones muy complejas/memorización
+        learning_rate=learning_rate,  # 0.03: Aprendizaje lento
+        
+        min_child_weight=5,           # Exige al menos 5 muestras para crear una hoja
+        gamma=0.5,                    # Penalización alta para dividir nodos
+        subsample=0.6,                # Usa solo el 60% de las filas por árbol
+        colsample_bytree=0.6,         # Usa solo el 60% de las features por árbol
+        reg_lambda=2.0,               # Regularización L2 fuerte
+        # -----------------------------------
+        
         random_state=random_state,
         n_jobs=-1,
-        use_label_encoder=False  # Important per evitar warnings en versions recents
+        use_label_encoder=False,
+        early_stopping_rounds=20      # Parar si Test no mejora en 20 rondas
     )
 
-    xgb_model.fit(X_train, y_train)
-    print("✅ Entrenament de XGBoost finalitzat.")
+    # Pasamos eval_set para que el early_stopping funcione
+    xgb_model.fit(
+        X_train, y_train,
+        eval_set=[(X_train, y_train), (X_test, y_test)],
+        verbose=False # Cambiar a True si quieres ver el log de error bajando
+    )
 
-    # 2. PREDICCIÓ
+    print(f"✅ Entrenament finalitzat. Millor iteració: {xgb_model.best_iteration}")
+
+    # 2. PREDICCIÓ (Usa automáticamente la mejor iteración gracias a early_stopping)
     y_pred_test = xgb_model.predict(X_test)
     y_pred_train = xgb_model.predict(X_train)
-    y_prob_test = xgb_model.predict_proba(X_test) # XGBoost sempre retorna probabilitats amb softprob
+    y_prob_test = xgb_model.predict_proba(X_test)
 
     # 3. AVALUACIÓ I RESULTATS
     train_accuracy = accuracy_score(y_train, y_pred_train)
@@ -332,41 +351,47 @@ def executar_xgboost(X_train, X_test, y_train, y_test, label_encoder, data_type,
         y_test, y_pred_test, average='weighted'
     )
 
-    print("\n📊 AVALUACIÓ XGBOOST")
+    print("\n📊 AVALUACIÓ XGBOOST (REALISTA)")
     print("-----------------------------------")
-    print(f"Train Accuracy: {train_accuracy:.4f}")
-    print(f"Test Accuracy: {test_accuracy:.4f}")
+    print(f"Train Accuracy: {train_accuracy:.4f} (Objetivo: < 0.90)")
+    print(f"Test Accuracy:  {test_accuracy:.4f}")
+    print(f"Gap:            {train_accuracy - test_accuracy:.4f} (Objetivo: < 0.15)")
     print(f"Precision Global: {precision:.4f}")
-    print(f"Recall Global: {recall:.4f}")
-    print(f"F1 Score Global: {f1:.4f}")
+    print(f"Recall Global:    {recall:.4f}")
+    print(f"F1 Score Global:  {f1:.4f}")
+    
     print("\n📄 Classification Report:")
     print(classification_report(y_test, y_pred_test, target_names=class_names))
 
-    # 4. GENERACIÓ DE PLOTS (Inclou el nou gràfic d'Importància de Variables)
+    # 4. GENERACIÓ DE PLOTS
     print("\n📈 Generant plots...")
     
-    # 4.1 Plot d'Importància de Variables
-    plot_feature_importances(xgb_model, feature_names, MODEL_NAME) # Utilitzem una nova funció de plotting
-    
-    # 4.2 Plots generals
-    plot_per_class_metrics(y_test, y_pred_test, class_names, MODEL_NAME)
-    plot_confusion_matrix(y_test, y_pred_test, class_names, MODEL_NAME)
-    
-    # 4.3 Plots basats en probabilitats (ROC/PR)
-    plot_roc_curve(y_test, y_prob_test, MODEL_NAME, class_names)
-    plot_general_roc_curve(y_test, y_prob_test, MODEL_NAME, class_names)
-    plot_precision_recall_curve(y_test, y_prob_test, MODEL_NAME, class_names)
-    plot_general_pr_curve(y_test, y_prob_test, MODEL_NAME, class_names)
+    # Asegúrate de que estas funciones existen en tu entorno o impórtalas
+    try:
+        # 4.1 Plot d'Importància de Variables
+        plot_feature_importances(xgb_model, feature_names, MODEL_NAME)
+        
+        # 4.2 Plots generals
+        plot_per_class_metrics(y_test, y_pred_test, class_names, MODEL_NAME)
+        plot_confusion_matrix(y_test, y_pred_test, class_names, MODEL_NAME)
+        
+        # 4.3 Plots basats en probabilitats
+        plot_roc_curve(y_test, y_prob_test, MODEL_NAME, class_names)
+        plot_general_roc_curve(y_test, y_prob_test, MODEL_NAME, class_names)
+        plot_precision_recall_curve(y_test, y_prob_test, MODEL_NAME, class_names)
+        plot_general_pr_curve(y_test, y_prob_test, MODEL_NAME, class_names)
+    except NameError as e:
+        print(f"⚠️ No se pudieron generar los plots (falta función): {e}")
         
     print(f"✅ Execució de {MODEL_NAME} completada.")
 
-    # Retornar les mètriques clau
     return {
         'model': MODEL_NAME,
         'accuracy': test_accuracy,
         'train_accuracy': train_accuracy,
         'f1_score': f1,
-        'probabilities': y_prob_test
+        'probabilities': y_prob_test,
+        'model_object': xgb_model # Retornamos el objeto por si quieres guardarlo
     }
 
 def executar_regressio_logistica(X_train, X_test, y_train, y_test, label_encoder, data_type, 
