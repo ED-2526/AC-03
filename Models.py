@@ -315,10 +315,10 @@ def executar_xgboost(X_train, X_test, y_train, y_test, label_encoder, scaler, da
         
         # --- PARÁMETROS ANTI-OVERFITTING ---
         n_estimators=n_estimators,
-        max_depth=max_depth,          # Profundidad 3: Evita relaciones muy complejas/memorización
+        max_depth=max_depth,          # Profundidad 2: Evita relaciones muy complejas/memorización
         learning_rate=learning_rate,  # 0.05: Aprendizaje lento
         
-        gamma=5,                     # Requiere una reducción significativa de pérdida para hacer un split
+        gamma=7,                     # Requiere una reducción significativa de pérdida para hacer un split
         min_child_weight=5,          # Al menos 5 muestras por hoja
         subsample=0.8,                # Usa solo el 80% de las filas por árbol
         colsample_bytree=0.8,         # Usa solo el 80% de las features por árbol
