@@ -7,6 +7,7 @@ import seaborn as sns
 from sklearn.preprocessing import label_binarize
 from sklearn.metrics import roc_curve, auc, precision_recall_curve, average_precision_score
 from itertools import cycle
+from sklearn.model_selection import validation_curve, learning_curve
 
 def plot_per_class_metrics(y_test, y_pred, class_names, model_name):
     
@@ -306,3 +307,81 @@ def plot_comparative_roc(y_test, probabilities_dict, model_names, class_names, d
     plt.savefig(filename)
     plt.close()
     print(f"✅ Gràfic comparatiu ROC desat a: {filename}")
+
+def plot_single_validation_curve(estimator, X, y, param_name, param_range, title, xlabel, SAVE_DIR):
+    print(f"   ⚙️  Generando curva de validación para: {param_name}...")
+    
+    # Calculamos la precisión en Train y en Test (Cross-Validation)
+    train_scores, test_scores = validation_curve(
+        estimator, X, y, 
+        param_name=param_name, 
+        param_range=param_range,
+        cv=3, 
+        scoring="accuracy", 
+        n_jobs=-1
+    )
+
+    # Medias y desviaciones estándar
+    train_mean = np.mean(train_scores, axis=1)
+    train_std = np.std(train_scores, axis=1)
+    test_mean = np.mean(test_scores, axis=1)
+    test_std = np.std(test_scores, axis=1)
+
+    plt.figure(figsize=(10, 6))
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel("Accuracy")
+    plt.ylim(0.0, 1.1)
+    
+    # Dibujamos Train (Naranja)
+    plt.plot(param_range, train_mean, label="Training Score", color="darkorange", lw=2)
+    plt.fill_between(param_range, train_mean - train_std, train_mean + train_std, alpha=0.1, color="darkorange")
+    
+    # Dibujamos Test/Validación (Azul) - ESTA ES LA IMPORTANTE
+    plt.plot(param_range, test_mean, label="Cross-Validation Score", color="navy", lw=2, marker='o')
+    plt.fill_between(param_range, test_mean - test_std, test_mean + test_std, alpha=0.1, color="navy")
+    
+    plt.legend(loc="best")
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    
+    filename = f"{SAVE_DIR}/VC_{param_name}.png"
+    plt.savefig(filename)
+    plt.close()
+    print(f"   ✅ Guardado: {filename}")
+
+def plot_final_learning_curve(estimator, X, y, title, SAVE_DIR):
+    print("   📈 Generando Curva de Aprendizaje (Learning Curve)...")
+    
+    train_sizes, train_scores, test_scores = learning_curve(
+        estimator, X, y,
+        cv=3,
+        n_jobs=-1,
+        train_sizes=np.linspace(0.1, 1.0, 5), # 10%, 32%, 55%, 77%, 100% de datos
+        scoring="accuracy"
+    )
+
+    train_mean = np.mean(train_scores, axis=1)
+    train_std = np.std(train_scores, axis=1)
+    test_mean = np.mean(test_scores, axis=1)
+    test_std = np.std(test_scores, axis=1)
+
+    plt.figure(figsize=(10, 6))
+    plt.title(title)
+    plt.xlabel("Número de muestras de entrenamiento")
+    plt.ylabel("Accuracy")
+    plt.grid(True, linestyle='--')
+    
+    # Bandas de error
+    plt.fill_between(train_sizes, train_mean - train_std, train_mean + train_std, alpha=0.1, color="r")
+    plt.fill_between(train_sizes, test_mean - test_std, test_mean + test_std, alpha=0.1, color="g")
+    
+    # Líneas
+    plt.plot(train_sizes, train_mean, 'o-', color="r", label="Training Score")
+    plt.plot(train_sizes, test_mean, 'o-', color="g", label="Cross-Validation Score")
+
+    plt.legend(loc="best")
+    plt.tight_layout()
+    plt.savefig(f"{SAVE_DIR}/Learning_Curve_Final.png")
+    plt.close()
+    print(f"   ✅ Guardado: {SAVE_DIR}/Learning_Curve_Final.png")
