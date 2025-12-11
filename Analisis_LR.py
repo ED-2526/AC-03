@@ -17,20 +17,23 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 # =============================================================================
 # BLOC 1 - CERCA EXHAUSTIVA INICIAL (NO EJECUTADA POR DEFECTO)
 # =============================================================================
-def run_grid_search(X_train, y_train):
-    print("\n--- Executant Grid Search Exhaustiu per a LR ---")
+def run_heavy_grid_search_lr(X_train, y_train):
+    """
+    Aquesta funció conté la cerca inicial per a Logistic Regression.
+    No s'executa per defecte, però es deixa aquí com a evidència del codi utilitzat.
+    """
+    print("\n⚠️  INICIANT CERCA EXHAUSTIVA LR...")
     param_grid = {
         'C': [0.01, 0.1, 1.0, 10.0, 100.0],
         'max_iter': [100, 200, 500],
         'solver': ['lbfgs', 'newton-cg', 'sag']
     }
-    
-    lr = LogisticRegression(multi_class='multinomial', random_state=RANDOM_STATE, n_jobs=-2)
-    grid_search = GridSearchCV(lr, param_grid, cv=5, n_jobs=-2, scoring='accuracy', verbose=1)
-    grid_search.fit(X_train, y_train)
-    
-    print(f"Millors Paràmetres: {grid_search.best_params_}")
-    print(f"Millor Score de Validació Creuada: {grid_search.best_score_:.4f}")
+    model = LogisticRegression(multi_class='multinomial', random_state=RANDOM_STATE, n_jobs=-2)
+    grid = GridSearchCV(model, param_grid, cv=5, scoring='accuracy', verbose=1, n_jobs=-2)
+    grid.fit(X_train, y_train)
+    print(f"Millors paràmetres: {grid.best_params_}")
+    print(f"Millor Score de Validació Creuada: {grid.best_score_:.4f}")
+    pd.DataFrame(grid.cv_results_).to_csv("gridsearch_results_lr_fase1.csv")
 
 # =============================================================================
 # MAIN
