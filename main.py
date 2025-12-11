@@ -90,7 +90,7 @@ def main():
     # --- Models de classificació ---
     model_map_classificacio = {
         '1': lambda: executar_knn(X_train, X_test, y_train, y_test, label_encoder, data_type, best_k=4, best_weights='distance', best_p=1),
-        '2': lambda: executar_random_forest(X_train, X_test, y_train, y_test, label_encoder, data_type, n_estimators=250, max_depth=10, min_samples_split=2),
+        '2': lambda: executar_random_forest(X_train, X_test, y_train, y_test, label_encoder, data_type, n_estimators=50, max_depth=8, min_samples_split=15, min_samples_leaf=5),
         '3': lambda: executar_svm(X_train, X_test, y_train, y_test, label_encoder, data_type, C=10.0, gamma=0.001),
         '4': lambda: executar_xgboost(X_train, X_test, y_train, y_test, label_encoder, scaler, data_type),
         '5': lambda: executar_regressio_logistica(X_train, X_test, y_train, y_test, label_encoder, data_type),

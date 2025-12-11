@@ -106,7 +106,7 @@ def executar_knn(X_train, X_test, y_train, y_test, label_encoder, data_type,
 
 
 def executar_random_forest(X_train, X_test, y_train, y_test, label_encoder, data_type, 
-                           n_estimators=200, max_depth=20, min_samples_split=2):
+                           n_estimators=200, max_depth=20, min_samples_split=2, min_samples_leaf=2):
     """
     Entrena, avalua i genera els plots del model Random Forest
     amb els hiperparàmetres òptims definits.
@@ -129,6 +129,7 @@ def executar_random_forest(X_train, X_test, y_train, y_test, label_encoder, data
         n_estimators=n_estimators,
         max_depth=max_depth,
         min_samples_split=min_samples_split,
+        min_samples_leaf=min_samples_leaf,
         random_state=42, 
         n_jobs=-1 
     )
