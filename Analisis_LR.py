@@ -42,7 +42,7 @@ def main():
     print("--- 🔬 LABORATORI D'ANÀLISI REGRESSIÓ LOGÍSTICA ---")
     
     # 1. Carregar dades
-    X_train, X_test, y_train, y_test, label_encoder, scaler = split_datos_3s(random_state=RANDOM_STATE)
+    X_train, X_test, y_train, y_test, label_encoder, scaler = split_datos_30s(random_state=RANDOM_STATE)
     
     # 2. Definir Model Base per a Exploració
     # 'lbfgs' és el solver per defecte i robust per a problemes multiclasse
@@ -69,7 +69,7 @@ def main():
 
     # --- GRÁFICA 2: JUSTIFICACIÓN DE MAX_ITER ---
     #     
-    model_iter = LogisticRegression(**fixed_params, C=0.2)
+    model_iter = LogisticRegression(**fixed_params, C=0.01)
     plot_single_validation_curve(
         model_iter, X_train, y_train,
         param_name="max_iter",

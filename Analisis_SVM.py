@@ -6,8 +6,7 @@ from sklearn.svm import SVC
 from sklearn.model_selection import validation_curve, learning_curve
 import os
 
-from carrega_dades import split_datos_3s   # ← IMPORTA LES TEVES FUNCIONS
-                                           # (el fitxer que m’acabes de passar)
+from carrega_dades import split_datos_3s,split_datos_30s   
 
 # ======================================================
 # CONFIGURACIÓ
@@ -101,7 +100,7 @@ def main():
     # 2. Model base
     # -------------------------
     base_model = SVC(
-        #C=0.5
+        #C=1
         #gamma = 0.005
         kernel='rbf',
         probability=True,

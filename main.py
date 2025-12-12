@@ -65,7 +65,7 @@ def triar_model():
     print(" [9] Tots els models de CLASSIFICACIÓ (1-9)")
     
     while True:
-        choice = input("Introdueix 0-10: ").strip()
+        choice = input("Introdueix 0-9: ").strip()
         if choice.isdigit() and 0 <= int(choice) <= 10:
             return choice
         else:
@@ -129,7 +129,7 @@ def main():
         model_map_classificacio = {
             '1': lambda: executar_knn(X_train, X_test, y_train, y_test, label_encoder, data_type, best_k=4, best_weights='distance', best_p=1),
             '2': lambda: executar_random_forest(X_train, X_test, y_train, y_test, label_encoder, data_type, n_estimators=50, max_depth=8, min_samples_split=15, min_samples_leaf=5),
-            '3': lambda: executar_svm(X_train, X_test, y_train, y_test, label_encoder, data_type, C=1, gamma=0.005),
+            '3': lambda: executar_svm(X_train, X_test, y_train, y_test, label_encoder, data_type, C=1, gamma=0.002), #3s(c=1,gamma=0.005), 30s (c=1,gamma=0.002)
             '4': lambda: executar_xgboost(X_train, X_test, y_train, y_test, label_encoder, scaler, data_type),
             '5': lambda: executar_regressio_logistica(X_train, X_test, y_train, y_test, label_encoder, data_type),
             '6': lambda: executar_decision_tree(X_train, X_test, y_train, y_test, label_encoder, data_type),
@@ -156,7 +156,7 @@ def main():
                     prob_dict[result['model']] = result['probabilities']
                     model_names_list.append(result['model'])
 
-            if choice == '10' and prob_dict:
+            if choice == '9' and prob_dict:
                 plot_comparative_roc(y_test, prob_dict, model_names_list, label_encoder.classes_, data_type)
 
             # TAULA FINAL
