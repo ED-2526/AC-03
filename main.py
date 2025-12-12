@@ -14,7 +14,7 @@ from carrega_dades import (
 from Models import (
     executar_knn, executar_random_forest, executar_svm, executar_xgboost, 
     executar_regressio_logistica, executar_decision_tree, executar_gmm_classifier, 
-    executar_naive_bayes, executar_kmeans_clustering 
+    executar_naive_bayes 
 )
 from plots_2 import plot_class_distribution, plot_comparative_roc
 
@@ -128,7 +128,7 @@ def main():
         # Definició de models
         model_map_classificacio = {
             '1': lambda: executar_knn(X_train, X_test, y_train, y_test, label_encoder, data_type, best_k=4, best_weights='distance', best_p=1),
-            '2': lambda: executar_random_forest(X_train, X_test, y_train, y_test, label_encoder, data_type, n_estimators=250, max_depth=10, min_samples_split=2),
+            '2': lambda: executar_random_forest(X_train, X_test, y_train, y_test, label_encoder, data_type, n_estimators=50, max_depth=8, min_samples_split=15, min_samples_leaf=5),
             '3': lambda: executar_svm(X_train, X_test, y_train, y_test, label_encoder, data_type, C=1, gamma=0.005),
             '4': lambda: executar_xgboost(X_train, X_test, y_train, y_test, label_encoder, scaler, data_type),
             '5': lambda: executar_regressio_logistica(X_train, X_test, y_train, y_test, label_encoder, data_type),
