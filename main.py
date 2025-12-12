@@ -62,8 +62,7 @@ def triar_model():
     print(" [6] Decision Tree (DT)")
     print(" [7] GMM Classifier")
     print(" [8] Naive Bayes (NB)")
-    print(" [9] K-Means Clustering") 
-    print(" [10] Tots els models de CLASSIFICACIÓ (1-9)")
+    print(" [9] Tots els models de CLASSIFICACIÓ (1-9)")
     
     while True:
         choice = input("Introdueix 0-10: ").strip()
@@ -130,7 +129,7 @@ def main():
         model_map_classificacio = {
             '1': lambda: executar_knn(X_train, X_test, y_train, y_test, label_encoder, data_type, best_k=4, best_weights='distance', best_p=1),
             '2': lambda: executar_random_forest(X_train, X_test, y_train, y_test, label_encoder, data_type, n_estimators=250, max_depth=10, min_samples_split=2),
-            '3': lambda: executar_svm(X_train, X_test, y_train, y_test, label_encoder, data_type, C=10.0, gamma=0.001),
+            '3': lambda: executar_svm(X_train, X_test, y_train, y_test, label_encoder, data_type, C=1, gamma=0.005),
             '4': lambda: executar_xgboost(X_train, X_test, y_train, y_test, label_encoder, scaler, data_type),
             '5': lambda: executar_regressio_logistica(X_train, X_test, y_train, y_test, label_encoder, data_type),
             '6': lambda: executar_decision_tree(X_train, X_test, y_train, y_test, label_encoder, data_type),
@@ -140,8 +139,6 @@ def main():
 
         models_results = []
         if choice == '9':
-            models_results.append(executar_kmeans_clustering(X_train, X_test, y_train, y_test, label_encoder, data_type))
-        elif choice == '10':
             for key, func in model_map_classificacio.items():
                 models_results.append(func())
         elif choice in model_map_classificacio:

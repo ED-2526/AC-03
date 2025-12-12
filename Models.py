@@ -671,64 +671,6 @@ def executar_gmm_classifier(X_train, X_test, y_train, y_test, label_encoder, dat
         'probabilities': y_prob_test 
     }
 
-def executar_kmeans_clustering(X_train, X_test, y_train, y_test, label_encoder, data_type, 
-                               n_clusters=10, random_state=42):
-    """
-    Executa l'algorisme K-Means sobre el conjunt de test (X_test) per trobar clústers.
-    Avalua la qualitat del clustering amb Inèrcia i l'alineació amb els gèneres reals.
-
-    Args:
-        X_train, X_test, y_train, y_test: Dades pre-processades.
-        label_encoder: Encoder (per a obtenir els noms de les classes).
-        data_type (str): Tipus de dades ('3s' o '30s').
-        n_clusters (int): Nombre de clústers a trobar (idealment, 10, com els gèneres).
-    """
-    MODEL_NAME = f"K-Means Clustering (K={n_clusters} - {data_type})"
-    
-    # 1. DEFINICIÓ I AJUSTAMENT (Entrenament)
-    print(f"\n🌀 Iniciant K-Means Clustering amb K={n_clusters}...")
-    
-    # K-Means s'entrena amb X_train
-    kmeans = KMeans(
-        n_clusters=n_clusters,
-        random_state=random_state,
-        n_init=10  # Múltiples inicialitzacions per millorar la qualitat
-    )
-
-    # Entrenem K-Means només amb les característiques (no necessita y_train)
-    kmeans.fit(X_train)
-    print("✅ Ajustament K-Means finalitzat.")
-
-    # 2. PREDICCIÓ (Assignació de clústers)
-    # Assignem un clúster a cada mostra de test
-    test_clusters = kmeans.predict(X_test)
-    
-    # 3. AVALUACIÓ (Mètriques de Clustering)
-    
-    # Mètrica 1: Inèrcia (Inertia / SSE)
-    # L'inèrcia es pot obtenir directament de l'objecte kmeans ajustat
-    inertia = kmeans.inertia_
-    
-    # Mètrica 2: Adjusted Rand Index (ARI) - Avaluació externa
-    # Aquesta mètrica compara els clústers trobats (test_clusters) amb les etiquetes reals (y_test)
-    # ARI proper a 1.0 significa que els clústers coincideixen perfectament amb els gèneres.
-    ari_score = adjusted_rand_score(y_test, test_clusters)
-    
-    print(f"\n📊 RESULTATS {MODEL_NAME}")
-    print("-----------------------------------")
-    print(f"Número de Clústers (K): {n_clusters}")
-    print(f"Inèrcia (SSE): {inertia:.2f}")
-    print(f"Adjusted Rand Index (ARI): {ari_score:.4f} (Coincidència amb Gèneres)")
-    print("-----------------------------------")
-
-    # K-Means NO té predict_proba, ni Train Accuracy, ni F1 Score.
-    # NO genera plots ROC/PR/Confusió.
-
-    return {
-        'model': MODEL_NAME,
-        'ARI Score': ari_score, # Utilitzem ARI com a mètrica de rendiment
-        'Inertia': inertia
-    }
 
 def executar_naive_bayes(X_train, X_test, y_train, y_test, label_encoder, data_type, random_state=42):
     """
