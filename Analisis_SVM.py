@@ -12,7 +12,7 @@ from carrega_dades import split_datos_3s,split_datos_30s
 # CONFIGURACIÓ
 # ======================================================
 RANDOM_STATE = 42
-SAVE_DIR = "Plots/Justificacion_Parametros_SVC"
+SAVE_DIR = "Plots/Justificacion_Parametros_SVC_30s"
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 # ======================================================

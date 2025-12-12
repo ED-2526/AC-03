@@ -10,7 +10,7 @@ import numpy as np
 from sklearn.model_selection import GroupShuffleSplit
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 import os
-
+import matplotlib.pyplot as plt
 import os
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder, StandardScaler
@@ -53,21 +53,41 @@ def cargar_y_preprocesar_datos_3s(filepath=None):
     return X, y_encoded, groups, le
 
 
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import StratifiedGroupKFold # <--- NOVA EINA
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+import os
+
+# [La funció cargar_y_preprocesar_datos_3s() es manté igual, 
+#  ja que fa una feina de preparació de dades i groups correcta.]
+
 def split_datos_3s(filepath=None, test_size=0.2, random_state=42):
     """
-    Llama automáticamente a cargar_y_preprocesar_datos_3s(), 
-    luego aplica GroupShuffleSplit y escalado.
-    El usuario NO tiene que pasar X, y ni groups desde el main.
+    APLICACIÓ DE STRATIFIEDGROUPKFOLD per assegurar l'estratificació 
+    mentre es manté la separació de grups (GroupShuffleSplit).
     """
 
     # --- 1. Cargar y preprocesar datos ---
     X, y, groups, label_encoder = cargar_y_preprocesar_datos_3s(filepath)
 
-    print(f"⚙️ Realizando GroupShuffleSplit (test_size={test_size})...")
+    print(f"⚙️ Realizando StratifiedGroupKFold (test_size={test_size})...")
 
-    # --- 2. GroupShuffleSplit ---
-    gss = GroupShuffleSplit(n_splits=1, test_size=test_size, random_state=random_state)
-    train_idx, test_idx = next(gss.split(X, y, groups=groups))
+    # --- 2. StratifiedGroupKFold ---
+    
+    # 2.1. Inicialitzar el validador
+    # N_splits = 1/test_size per simular el percentatge de split
+    # Amb test_size=0.2, necessitem n_splits=5 per obtenir una divisió 80/20.
+    n_splits_for_test_size = int(1 / test_size)
+    
+    # L'eina StratifiedGroupKFold garanteix:
+    # 1. Cap song_group compartit entre train i test.
+    # 2. La proporció de 'y' és aproximadament igual en train i test.
+    sgkf = StratifiedGroupKFold(n_splits=n_splits_for_test_size, shuffle=True, random_state=random_state)
+    
+    # Només agafem la primera (i única) divisió de les n_splits (que és la nostra partició 80/20)
+    # y (la target) és necessari aquí per a l'estratificació!
+    train_idx, test_idx = next(sgkf.split(X, y, groups=groups))
 
     X_train_raw = X.iloc[train_idx]
     X_test_raw = X.iloc[test_idx]
@@ -80,15 +100,18 @@ def split_datos_3s(filepath=None, test_size=0.2, random_state=42):
     X_train = scaler.fit_transform(X_train_raw)
     X_test = scaler.transform(X_test_raw)
 
-    # --- 4. Verificación de Data Leakage ---
+    # --- 4. Verificación de Data Leakage (La comprovació es manté) ---
     train_songs = set(groups.iloc[train_idx])
     test_songs = set(groups.iloc[test_idx])
     shared = train_songs.intersection(test_songs)
 
     print(f"✅ Train shape: {X_train.shape}, Test shape: {X_test.shape}")
     print(f"✅ Data Leakage evitado: {len(shared)} canciones compartidas (debe ser 0).")
+    # Immediatament després de fer aquesta modificació i tornar a executar el main amb la funció d'anàlisi,
+    # el nou gràfic de distribució de classes mostrarà barres molt més alineades.
 
     return X_train, X_test, y_train, y_test, label_encoder, scaler
+
 
 
 def cargar_y_preprocesar_datos_30s(filepath=None):
