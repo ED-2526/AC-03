@@ -8,6 +8,8 @@ from sklearn.preprocessing import label_binarize
 from sklearn.metrics import roc_curve, auc, precision_recall_curve, average_precision_score
 from itertools import cycle
 from sklearn.model_selection import validation_curve, learning_curve
+from sklearn.metrics import accuracy_score
+
 
 def plot_per_class_metrics(y_test, y_pred, class_names, model_name):
     
@@ -308,47 +310,57 @@ def plot_comparative_roc(y_test, probabilities_dict, model_names, class_names, d
     plt.close()
     print(f"✅ Gràfic comparatiu ROC desat a: {filename}")
 
-def plot_single_validation_curve(estimator, X, y, param_name, param_range, title, xlabel, SAVE_DIR):
-    print(f"   ⚙️  Generando curva de validación para: {param_name}...")
+def plot_single_validation_curve(model, X_train, y_train, X_test, y_test, 
+                                       param_name, param_range, title, xlabel, SAVE_DIR):
+    """
+    Genera la corba de validació SENSE CV.
+    Entrena el model completament amb X_train i l'avalua amb X_test a cada iteració.
+    """
+    print(f"⚙️ Iniciant validació de {param_name} SENSE CV...")
+
+    train_scores = []
+    test_scores = []
     
-    # Calculamos la precisión en Train y en Test (Cross-Validation)
-    train_scores, test_scores = validation_curve(
-        estimator, X, y, 
-        param_name=param_name, 
-        param_range=param_range,
-        cv=3, 
-        scoring="accuracy", 
-        n_jobs=-1
-    )
-
-    # Medias y desviaciones estándar
-    train_mean = np.mean(train_scores, axis=1)
-    train_std = np.std(train_scores, axis=1)
-    test_mean = np.mean(test_scores, axis=1)
-    test_std = np.std(test_scores, axis=1)
-
+    # 1. Iterar sobre el rang de paràmetres
+    for param_value in param_range:
+        # A. Clonar el model i assignar el nou hiperparàmetre
+        model.set_params(**{param_name: param_value})
+        
+        # B. Entrenament complet amb el conjunt Train
+        model.fit(X_train, y_train)
+        
+        # C. Avaluació:
+        # Puntuació al conjunt d'entrenament
+        train_scores.append(accuracy_score(y_train, model.predict(X_train)))
+        # Puntuació al conjunt de prova (TEST)
+        test_scores.append(accuracy_score(y_test, model.predict(X_test)))
+    
+    # 2. Generar el gràfic
     plt.figure(figsize=(10, 6))
-    plt.title(title)
+    
+    # Conversió a escala logarítmica si és el paràmetre C
+    if param_name == "C":
+        plt.plot(param_range, train_scores, label='Train accuracy', marker='o', color='blue')
+        plt.plot(param_range, test_scores, label='Test accuracy', marker='o', color='red')
+        plt.xscale('log') 
+    else:
+        plt.plot(param_range, train_scores, label='Train accuracy', marker='o', color='blue')
+        plt.plot(param_range, test_scores, label='Test accuracy', marker='o', color='red')
+    
     plt.xlabel(xlabel)
-    plt.ylabel("Accuracy")
-    plt.ylim(0.0, 1.1)
-    
-    # Dibujamos Train (Naranja)
-    plt.plot(param_range, train_mean, label="Training Score", color="darkorange", lw=2)
-    plt.fill_between(param_range, train_mean - train_std, train_mean + train_std, alpha=0.1, color="darkorange")
-    
-    # Dibujamos Test/Validación (Azul) - ESTA ES LA IMPORTANTE
-    plt.plot(param_range, test_mean, label="Cross-Validation Score", color="navy", lw=2, marker='o')
-    plt.fill_between(param_range, test_mean - test_std, test_mean + test_std, alpha=0.1, color="navy")
-    
+    plt.ylabel('Accuracy')
     plt.legend(loc="best")
-    plt.grid(True, linestyle='--', alpha=0.7)
-    plt.tight_layout()
+    plt.title(title)
+    plt.grid(linestyle='--')
     
-    filename = f"{SAVE_DIR}/VC_{param_name}.png"
-    plt.savefig(filename)
+    # Guardar la figura
+    filepath = os.path.join(SAVE_DIR, f"validation_curve_{param_name}_no_cv.png")
+    plt.savefig(filepath)
     plt.close()
-    print(f"   ✅ Guardado: {filename}")
+    print(f"✅ Gràfic de {param_name} SENSE CV guardat a: {filepath}")
+    
+    # Retornar els resultats per trobar el millor paràmetre
+    return param_range, test_scores
 
 def plot_final_learning_curve(estimator, X, y, title, SAVE_DIR):
     print("   📈 Generando Curva de Aprendizaje (Learning Curve)...")

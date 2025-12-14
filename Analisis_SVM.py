@@ -3,105 +3,47 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.svm import SVC
-from sklearn.model_selection import validation_curve, learning_curve
+from sklearn.model_selection import train_test_split # Necessari per a la simulació de dades
+from sklearn.metrics import accuracy_score
 import os
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import xgboost as xgb
+from sklearn.metrics import accuracy_score
+import os
+# Descomentar al teu entorn:
+from carrega_dades import split_datos_3s, split_datos_30s
+from plots_2 import plot_final_learning_curve, plot_single_validation_curve
 
-from carrega_dades import split_datos_3s,split_datos_30s   
-
-# ======================================================
-# CONFIGURACIÓ
-# ======================================================
+# --- CONFIGURACIÓ GLOBAL ---
 RANDOM_STATE = 42
-SAVE_DIR = "Plots/Justificacion_Parametros_SVC_30s"
+SAVE_DIR = "Plots/Justificacion_Parametros_SVC_3s_FINAL"
 os.makedirs(SAVE_DIR, exist_ok=True)
 
-# ======================================================
-# FUNCIONS DE PLOT
-# ======================================================
-def plot_single_validation_curve(model, X, y, param_name, param_range, title, xlabel, SAVE_PATH):
-    print(f"   ⚙️  Generando curva de validación para: {param_name}...")
-
-    train_scores, test_scores = validation_curve(
-        model,
-        X,
-        y,
-        param_name=param_name,
-        param_range=param_range,
-        cv=5,
-        scoring='accuracy',
-        n_jobs=-1,
-        error_score=np.nan          # 🔥 CLAVE: no detener ejecución
-    )
-
-    train_mean = np.nanmean(train_scores, axis=1)
-    test_mean = np.nanmean(test_scores, axis=1)
-
-    plt.figure(figsize=(8, 5))
-    plt.plot(param_range, train_mean, label='Train', marker='o')
-    plt.plot(param_range, test_mean, label='Validation', marker='o')
-    plt.title(title)
-    plt.xlabel(xlabel)
-    plt.ylabel("Accuracy")
-    plt.legend()
-    plt.grid(True)
-    out = os.path.join(SAVE_PATH, f"VC_{param_name}.png")
-    plt.savefig(out)
-    plt.close()
-    print(f"   ✅ Guardado: {out}")
+def find_best_param(param_range, test_scores, tolerance=0.001):
+    best_score = np.max(test_scores)
+    best_param_index = np.where(test_scores >= (best_score - tolerance))[0][0]
+    return param_range[best_param_index]
 
 
-def plot_final_learning_curve(model, X, y, title, SAVE_PATH):
-    print("   📈 Generant Curva de Aprenentatge (Learning Curve)...")
-
-    train_sizes, train_scores, test_scores = learning_curve(
-        estimator=model,
-        X=X,
-        y=y,
-        cv=5,
-        train_sizes=np.linspace(0.1, 1.0, 5),
-        n_jobs=-1,
-        shuffle=True,
-        random_state=RANDOM_STATE,
-        error_score=np.nan    # 🔥 EVITA L’ERROR DE “1 sola classe”
-    )
-
-    train_mean = np.nanmean(train_scores, axis=1)
-    test_mean = np.nanmean(test_scores, axis=1)
-
-    plt.figure(figsize=(8, 5))
-    plt.plot(train_sizes, train_mean, label="Train", marker="o")
-    plt.plot(train_sizes, test_mean, label="Validation", marker="o")
-    plt.title(title)
-    plt.xlabel("Número de mostres d'entrenament")
-    plt.ylabel("Accuracy")
-    plt.grid(True)
-    plt.legend()
-
-    out = os.path.join(SAVE_PATH, "Learning_Curve_Final.png")
-    plt.savefig(out)
-    plt.close()
-    print(f"   ✅ Guardado: {out}")
-
+#Valors optims: C= 0.1 ,Gamma= 0.001
 # ======================================================
 # MAIN
 # ======================================================
 def main():
 
-    print("\n--- 🔬 LABORATORI D'ANÀLISI SVC ---")
+    print("\n--- 🔬 LABORATORI D'ANÀLISI SVC (FINAL SENSE CV) ---")
 
-    # -------------------------
-    # 1. Carregar i preprocesar dades utilitzant *el teu* split_datos_3s
-    # -------------------------
+    # 1. Carregar i preprocesar dades
     X_train, X_test, y_train, y_test, label_encoder, scaler = split_datos_3s(
         random_state=RANDOM_STATE
     )
 
-    # -------------------------
     # 2. Model base
-    # -------------------------
     base_model = SVC(
-        #C=1
-        #gamma = 0.005
         kernel='rbf',
         probability=True,
         random_state=RANDOM_STATE
@@ -110,38 +52,49 @@ def main():
     # -------------------------
     # 3. VALIDATION CURVE — C
     # -------------------------
-    plot_single_validation_curve(
+    C_range = np.array([0.1, 0.5, 1.0, 2.0, 5.0, 10.0])
+    
+    C_range_result, C_scores_test = plot_single_validation_curve(
         base_model,
-        X_train,
-        y_train,
+        X_train, y_train, X_test, y_test, 
         param_name="C",
-        param_range=[0.1, 0.5, 1.0, 2.0, 5.0,10.0],
+        param_range=C_range,
         title="Impacte del paràmetre C en SVC",
         xlabel="C",
-        SAVE_PATH=SAVE_DIR
+        SAVE_DIR=SAVE_DIR
     )
+    best_C = find_best_param(C_range_result, C_scores_test)
+    print(f"✨ Valor òptim de C trobat: {best_C}")
+
 
     # -------------------------
-    # 4. VALIDATION CURVE — gamma 
+    # 4. VALIDATION CURVE — gamma
     # -------------------------
-    plot_single_validation_curve(
-        base_model,
-        X_train,
-        y_train,
+    gamma_range = np.array([0.0005, 0.001, 0.005, 0.01, 0.05])
+    
+    # Fixem C al valor òptim trobat
+    model_gamma = SVC(kernel='rbf', probability=True, random_state=RANDOM_STATE, C=best_C) 
+    
+    gamma_range_result, gamma_scores_test = plot_single_validation_curve(
+        model_gamma,
+        X_train, y_train, X_test, y_test, 
         param_name="gamma",
-        param_range=[0.0005, 0.001, 0.005, 0.01, 0.05],
+        param_range=gamma_range,
         title="Impacte del paràmetre gamma en SVC",
         xlabel="gamma",
-        SAVE_PATH=SAVE_DIR
+        SAVE_DIR=SAVE_DIR
     )
+    best_gamma = find_best_param(gamma_range_result, gamma_scores_test)
+    print(f"✨ Valor òptim de gamma trobat: {best_gamma}")
+
 
     # -------------------------
-    # 5. Model final triat manualment (ajusta si vols)
+    # 5. Model final amb paràmetres
     # -------------------------
     final_model = SVC(
         kernel='rbf',
-        C=1.0,
-        gamma=0.005,
+        C=best_C,
+        gamma=best_gamma,
         probability=True,
         random_state=RANDOM_STATE
     )
@@ -151,10 +104,9 @@ def main():
     # -------------------------
     plot_final_learning_curve(
         final_model,
-        X_train,
-        y_train,
-        title="Curva d'Aprenentatge SVC (model final)",
-        SAVE_PATH=SAVE_DIR
+        X_train, y_train,
+        title="Curva d'Aprenentatge SVC",
+        SAVE_DIR=SAVE_DIR
     )
 
     print(f"\n✅ Anàlisi SVC completat. Gràfiques en: {SAVE_DIR}")
