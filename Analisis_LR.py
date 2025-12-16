@@ -1,25 +1,18 @@
-# Importa necessària:
-from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.model_selection import validation_curve, learning_curve
-from carrega_dades import (
-    split_datos_3s, split_datos_30s, 
-    cargar_y_preprocesar_datos_3s, cargar_y_preprocesar_datos_30s
-)
-import matplotlib
-matplotlib.use('Agg') # Evita errors de finestra gràfica (Tkinter)
-import matplotlib.pyplot as plt
-import pandas as pd
-from sklearn.linear_model import LogisticRegression
+from carrega_dades import split_datos_3s, split_datos_30s
 import os
-from plots_2 import (plot_final_learning_curve, plot_single_validation_curve )
+from sklearn.model_selection import GridSearchCV
+from plots_2 import plot_final_learning_curve, plot_single_validation_curve
+from sklearn.linear_model import LogisticRegression
 
 # --- CONFIGURACIÓ GLOBAL ---
 RANDOM_STATE = 42
 SAVE_DIR = "Plots/Justificacion_Parametros_LR"
 os.makedirs(SAVE_DIR, exist_ok=True)
-# Amb 3s(C=0.001,iter=50),30s(c=,iter=)
+# Valors optims amb 3s: C = 5.0, iter = 200
+# Valors optims amb 30s: C = , iter = 
+
 
 def main():
     print("--- 🔬 LABORATORI D'ANÀLISI REGRESSIÓ LOGÍSTICA ---")
@@ -30,63 +23,61 @@ def main():
     # 2. Definir Model Base per a Exploració
     fixed_params = {
         'solver': 'lbfgs',
-        'multi_class': 'multinomial', 
+        'multi_class': 'multinomial',
+        'penalty': 'l2',
         'random_state': RANDOM_STATE,
         'n_jobs': -1
     }
     
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    axes = axes.flatten()
+
     # --- GRÀFICA 1: JUSTIFICACIÓ DE LA REGULARITZACIÓ (C) - SENSE CV ---
     
     # Rang C en escala logarítmica
-    C_range = np.array([0.01, 0.05, 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
-    
+    C_range = np.array([0.01, 0.05, 0.1, 0.3, 0.5, 1.0, 2.0, 5.0, 10.0, 15.0, 20.0])
     model_C = LogisticRegression(**fixed_params, max_iter=1000)
     
     # CRIDA A LA NOVA FUNCIÓ: Ara passem X_test i y_test
-    C_range_result, C_scores_test = plot_single_validation_curve(
+    plot_single_validation_curve(
         model_C, X_train, y_train, X_test, y_test, # <- PASSEM TEST SET
         param_name="C", 
         param_range=C_range, 
         title="Impacte de la Regularització (Paràmetre C)", 
         xlabel="C (Escala Log)",
-        SAVE_DIR=SAVE_DIR
+        ax=axes[0]
     )
 
-    # 3. TROBAR EL MILLOR PARÀMETRE C BASAT EN EL RESULTAT DEL TEST SCORE
-    best_C_index = np.argmax(C_scores_test)
-    best_C = C_range_result[best_C_index]
-    print(f"\n✨ Valor òptim de C trobat (basat en Test Score): {best_C}")
-    
     # --- GRÀFICA 2: JUSTIFICACIÓ DE MAX_ITER ---
     
-    iter_range = np.array([5, 10, 25, 50, 100, 200, 500])
+    iter_range = np.array([5, 10, 25, 50, 100, 200, 500, 1000])
     
     # Utilitzem el millor C trobat per avaluar max_iter
-    model_iter = LogisticRegression(**fixed_params, C=best_C) 
+    model_iter = LogisticRegression(**fixed_params, C=5)
     
     # CRIDA A LA NOVA FUNCIÓ
-    iter_range_result, iter_scores_test = plot_single_validation_curve(
+    plot_single_validation_curve(
         model_iter, X_train, y_train, X_test, y_test, # <- PASSEM TEST SET
         param_name="max_iter",
         param_range=iter_range,
         title="Convergència del Model (max_iter)",
         xlabel="Màxim d'Iteracions",
-        SAVE_DIR=SAVE_DIR
+        ax=axes[1]
     )
 
-    # 4. TROBAR EL MILLOR PARÀMETRE max_iter
-    # Cerquem el punt d'estabilització (el valor més petit que manté el màxim score)
-    best_iter_score = np.max(iter_scores_test)
-    # Trobem el primer 'max_iter' on el score és proper al màxim (per eficiència)
-    best_iter = iter_range_result[iter_scores_test >= (best_iter_score - 0.001)][0] 
-    print(f"✨ Valor òptim de max_iter trobat (punt d'estabilització): {best_iter}")
+    axes[0].legend(loc='best')
+    plt.suptitle("Analisis Parámetros Regresion Logistica", fontsize=16, fontweight="bold")
+    plt.tight_layout()
+
+    plt.savefig(os.path.join(SAVE_DIR, "Justificacion_Parametros_LR.png"))
+    plt.close()
 
 
     # --- GRÀFICA FINAL: CURVA DE APRENENTATGE ---
     final_model = LogisticRegression(
         **fixed_params,
-        C=best_C, 
-        max_iter=best_iter 
+        C=5.0, 
+        max_iter=200 
     )
     
     # plot_final_learning_curve es manté amb CV, que és l'estàndard per a aquesta corba.

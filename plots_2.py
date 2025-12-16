@@ -311,12 +311,12 @@ def plot_comparative_roc(y_test, probabilities_dict, model_names, class_names, d
     print(f"✅ Gràfic comparatiu ROC desat a: {filename}")
 
 def plot_single_validation_curve(model, X_train, y_train, X_test, y_test, 
-                                       param_name, param_range, title, xlabel, SAVE_DIR):
+                                       param_name, param_range, title, xlabel, ax):
     """
     Genera la corba de validació SENSE CV.
     Entrena el model completament amb X_train i l'avalua amb X_test a cada iteració.
     """
-    print(f"⚙️ Iniciant validació de {param_name} SENSE CV...")
+    print(f"⚙️ Iniciant validació de {param_name} ...")
 
     train_scores = []
     test_scores = []
@@ -335,32 +335,21 @@ def plot_single_validation_curve(model, X_train, y_train, X_test, y_test,
         # Puntuació al conjunt de prova (TEST)
         test_scores.append(accuracy_score(y_test, model.predict(X_test)))
     
-    # 2. Generar el gràfic
-    plt.figure(figsize=(10, 6))
-    
     # Conversió a escala logarítmica si és el paràmetre C
     if param_name == "C":
-        plt.plot(param_range, train_scores, label='Train accuracy', marker='o', color='blue')
-        plt.plot(param_range, test_scores, label='Test accuracy', marker='o', color='red')
-        plt.xscale('log') 
+        ax.plot(param_range, train_scores, label='Train accuracy', marker='o', color='blue')
+        ax.plot(param_range, test_scores, label='Test accuracy', marker='o', color='red')
+        ax.set_xscale('log') 
     else:
-        plt.plot(param_range, train_scores, label='Train accuracy', marker='o', color='blue')
-        plt.plot(param_range, test_scores, label='Test accuracy', marker='o', color='red')
+        ax.plot(param_range, train_scores, label='Train accuracy', marker='o', color='blue')
+        ax.plot(param_range, test_scores, label='Test accuracy', marker='o', color='red')
     
-    plt.xlabel(xlabel)
-    plt.ylabel('Accuracy')
-    plt.legend(loc="best")
-    plt.title(title)
-    plt.grid(linestyle='--')
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel('Accuracy')
+    ax.set_title(title)
+    ax.grid(linestyle='--')
     
-    # Guardar la figura
-    filepath = os.path.join(SAVE_DIR, f"validation_curve_{param_name}_no_cv.png")
-    plt.savefig(filepath)
-    plt.close()
-    print(f"✅ Gràfic de {param_name} SENSE CV guardat a: {filepath}")
-    
-    # Retornar els resultats per trobar el millor paràmetre
-    return param_range, test_scores
+    print(f"   ✅ Validació de {param_name} completada.")
 
 def plot_final_learning_curve(estimator, X, y, title, SAVE_DIR):
     print("   📈 Generando Curva de Aprendizaje (Learning Curve)...")
