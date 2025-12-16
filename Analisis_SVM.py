@@ -8,11 +8,11 @@ from sklearn.svm import SVC
 
 # --- CONFIGURACIÓ GLOBAL ---
 RANDOM_STATE = 42
-SAVE_DIR = "Plots/Justificacion Parametros SVC (3s)"
+SAVE_DIR = "Plots/Justificacion Parametros SVC (30s)"
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 # Valors optims 3s: C = 1.0 , Gamma = 0.005
-# Valors optims 30s: C = , Gamma = 
+# Valors optims 30s: C = 0.8, Gamma = 0.01
 
 # ======================================================
 # MAIN
@@ -22,9 +22,8 @@ def main():
     print("\n--- 🔬 LABORATORI D'ANÀLISI SVC ---")
 
     # 1. Carregar i preprocesar dades
-    X_train, X_test, y_train, y_test, label_encoder, scaler = split_datos_3s(
-        random_state=RANDOM_STATE
-    )
+    #X_train, X_test, y_train, y_test, label_encoder, scaler = split_datos_3s(random_state=RANDOM_STATE)
+    X_train, X_test, y_train, y_test, label_encoder, scaler = split_datos_30s(random_state=RANDOM_STATE)
 
     # 2. Model base
     fixed_params = {
@@ -55,7 +54,7 @@ def main():
     # 4. VALIDATION CURVE — gamma
     # -------------------------
     gamma_range = np.array([0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.3])
-    model_gamma = SVC(**fixed_params, C=1) 
+    model_gamma = SVC(**fixed_params, C=0.8) # Amb 3s C=1.0 i amb 30s C=0.8
     plot_single_validation_curve(
         model_gamma,
         X_train, y_train, X_test, y_test, 
@@ -78,8 +77,8 @@ def main():
     # -------------------------
     final_model = SVC(
         kernel='rbf',
-        C=1,
-        gamma=0.005,
+        C=0.8, # Amb 3s C=1 i amb 30s C=0.8
+        gamma=0.01,  # Amb 3s C=0.005 i amb 30s C=0.01
         probability=True,
         random_state=RANDOM_STATE
     )

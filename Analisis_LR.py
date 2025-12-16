@@ -8,17 +8,20 @@ from sklearn.linear_model import LogisticRegression
 
 # --- CONFIGURACIÓ GLOBAL ---
 RANDOM_STATE = 42
-SAVE_DIR = "Plots/Justificacion_Parametros_LR"
+SAVE_DIR = "Plots/Justificacion Parametros LR"
 os.makedirs(SAVE_DIR, exist_ok=True)
-# Valors optims amb 3s: C = 5.0, iter = 200
-# Valors optims amb 30s: C = , iter = 
 
+# Valors optims amb 3s: C = 5.0, iter = 200
+# Valors optims amb 30s: C = 0.3, iter = 50
 
 def main():
     print("--- 🔬 LABORATORI D'ANÀLISI REGRESSIÓ LOGÍSTICA ---")
     
     # 1. Carregar dades (X_train i X_test són essencials)
-    X_train, X_test, y_train, y_test, label_encoder, scaler = split_datos_3s(random_state=RANDOM_STATE)
+
+    #X_train, X_test, y_train, y_test, label_encoder, scaler = split_datos_3s(random_state=RANDOM_STATE)
+    X_train, X_test, y_train, y_test, label_encoder, scaler = split_datos_30s(random_state=RANDOM_STATE)
+
     
     # 2. Definir Model Base per a Exploració
     fixed_params = {
@@ -53,7 +56,7 @@ def main():
     iter_range = np.array([5, 10, 25, 50, 100, 200, 500, 1000])
     
     # Utilitzem el millor C trobat per avaluar max_iter
-    model_iter = LogisticRegression(**fixed_params, C=5)
+    model_iter = LogisticRegression(**fixed_params, C=0.3) # Amb 3s C=5,30s i amb 30 C=0.3)
     
     # CRIDA A LA NOVA FUNCIÓ
     plot_single_validation_curve(
@@ -76,8 +79,8 @@ def main():
     # --- GRÀFICA FINAL: CURVA DE APRENENTATGE ---
     final_model = LogisticRegression(
         **fixed_params,
-        C=5.0, 
-        max_iter=200 
+        C=0.3, # Amb 3s C=5,30s i amb 30 C=0.3
+        max_iter=50 # Amb 3s max_iter=200 i amb 30s max_iter=50
     )
     
     # plot_final_learning_curve es manté amb CV, que és l'estàndard per a aquesta corba.

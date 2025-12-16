@@ -398,7 +398,7 @@ def executar_xgboost(X_train, X_test, y_train, y_test, label_encoder, scaler, da
 
 def executar_regressio_logistica(X_train, X_test, y_train, y_test, label_encoder, data_type, 
                                  C=5.0, penalty='l2', solver='lbfgs', max_iter=200, random_state=42):
-    # AMb 3s(C=0.2,iter=50),30s(c=0.01,iter=50)
+    # AMb 3s(C=5.0,iter=200),30s(c=0.3,iter=50)
     """
     Entrena, avalua i genera els plots del model de Regressió Logística
     per a la classificació multiclase.

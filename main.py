@@ -128,8 +128,9 @@ def main():
         # Definició de models
         model_map_classificacio = {
             '1': lambda: executar_knn(X_train, X_test, y_train, y_test, label_encoder, data_type, best_k=4, best_weights='distance', best_p=1),
-            '2': lambda: executar_random_forest(X_train, X_test, y_train, y_test, label_encoder, data_type, n_estimators=300, max_depth=8, min_samples_split=2, min_samples_leaf=16),
-            '3': lambda: executar_svm(X_train, X_test, y_train, y_test, label_encoder, data_type, C=1, gamma=0.005), #3s(c=1,gamma=0.005), 30s (c=1,gamma=0.002)
+            '2': lambda: executar_random_forest(X_train, X_test, y_train, y_test, label_encoder, data_type, n_estimators=50, max_depth=7, min_samples_split=2, min_samples_leaf=10),
+            #3s (n_estimators=300, max depth=8, min_samples_leaf=16, min_sample_split=2), 30s (n_estimators=50, max depth=7, min_samples_leaf=10, min_sample_split=2)
+            '3': lambda: executar_svm(X_train, X_test, y_train, y_test, label_encoder, data_type, C=0.8, gamma=0.01), #3s(c=1,gamma=0.005), 30s (c=1,gamma=0.002)
             '4': lambda: executar_xgboost(X_train, X_test, y_train, y_test, label_encoder, scaler, data_type),
             '5': lambda: executar_regressio_logistica(X_train, X_test, y_train, y_test, label_encoder, data_type),
             '6': lambda: executar_decision_tree(X_train, X_test, y_train, y_test, label_encoder, data_type),
