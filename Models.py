@@ -6,14 +6,15 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.mixture import GaussianMixture
 from sklearn.metrics import log_loss
 from sklearn.preprocessing import LabelEncoder
-from sklearn.cluster import KMeans
-from sklearn.metrics import adjusted_rand_score # Mètrica per comparar clustering amb etiquetes reals
+from sklearn.metrics import adjusted_rand_score 
+from sklearn.metrics import accuracy_score, classification_report, precision_recall_fscore_support
 from sklearn.metrics import (
     accuracy_score, classification_report, precision_recall_fscore_support
 )
@@ -21,7 +22,6 @@ from plots_2 import (
     plot_per_class_metrics, plot_confusion_matrix, plot_roc_curve, 
     plot_general_roc_curve, plot_precision_recall_curve, plot_general_pr_curve, plot_feature_importances
 )
-from sklearn.linear_model import LogisticRegression
 
 def executar_knn(X_train, X_test, y_train, y_test, label_encoder, data_type, 
                  best_k=4, best_weights='distance', best_p=1):
@@ -281,11 +281,6 @@ def executar_svm(X_train, X_test, y_train, y_test, label_encoder, data_type,
     }
 
 
-import xgboost as xgb
-import matplotlib.pyplot as plt
-from sklearn.metrics import accuracy_score, classification_report, precision_recall_fscore_support
-# Asegúrate de importar tus funciones de plot si están en otro archivo
-# from tus_plots import plot_feature_importances, plot_per_class_metrics, ...
 
 def executar_xgboost(X_train, X_test, y_train, y_test, label_encoder, scaler, data_type, 
                      n_estimators=300, # Bajado de 500 a 300 ya que tarda menos y no pierde mucha precisión

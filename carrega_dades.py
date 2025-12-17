@@ -4,18 +4,7 @@ import os
 from sklearn.model_selection import GroupShuffleSplit
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
-
-import pandas as pd
-import numpy as np
-from sklearn.model_selection import GroupShuffleSplit
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-import os
 import matplotlib.pyplot as plt
-import os
-import pandas as pd
-from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.model_selection import GroupShuffleSplit
-
 
 def cargar_y_preprocesar_datos_3s(filepath=None):
     """
