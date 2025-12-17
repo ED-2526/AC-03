@@ -176,5 +176,22 @@ def main():
                 print(df_results.sort_values(by='f1_score', ascending=False).to_markdown(floatfmt=".4f"))
             print("="*50)
 
+"""
+==================================================
+       ✨ RESUM DE RENDIMENT FINAL (3S) ✨
+==================================================
+| model                         |   accuracy |   train_accuracy |   f1_score |
+|:------------------------------|-----------:|-----------------:|-----------:|
+| SVM (3s)                      |     0.7384 |           0.8660 |     0.7357 |
+| XGBoost (3s)                  |     0.6988 |           0.8067 |     0.6962 |
+| GMM Classifier (3s)           |     0.6933 |           0.9772 |     0.6945 |
+| KNN (3s)                      |     0.6853 |           0.9987 |     0.6871 |
+| Regressió Logística (3s)      |     0.6833 |           0.7528 |     0.6802 |
+| Random Forest (3s)            |     0.6603 |           0.7655 |     0.6520 |
+| Decision Tree (3s)            |     0.5358 |           0.9987 |     0.5369 |
+| Naive Bayes (GaussianNB - 3s) |     0.5258 |           0.5298 |     0.5120 |
+==================================================
+"""
+
 if __name__ == "__main__":
     main()
