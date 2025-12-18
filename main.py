@@ -14,7 +14,7 @@ from carrega_dades import (
 from Models import (
     executar_knn, executar_random_forest, executar_svm, executar_xgboost, 
     executar_regressio_logistica, executar_decision_tree, executar_gmm_classifier, 
-    executar_naive_bayes, executar_kmeans_clustering 
+    executar_naive_bayes 
 )
 from plots_2 import plot_class_distribution, plot_comparative_roc
 
@@ -62,11 +62,10 @@ def triar_model():
     print(" [6] Decision Tree (DT)")
     print(" [7] GMM Classifier")
     print(" [8] Naive Bayes (NB)")
-    print(" [9] K-Means Clustering") 
-    print(" [10] Tots els models de CLASSIFICACIÓ (1-9)")
+    print(" [9] Tots els models de CLASSIFICACIÓ (1-9)")
     
     while True:
-        choice = input("Introdueix 0-10: ").strip()
+        choice = input("Introdueix 0-9: ").strip()
         if choice.isdigit() and 0 <= int(choice) <= 10:
             return choice
         else:
@@ -129,8 +128,9 @@ def main():
         # Definició de models
         model_map_classificacio = {
             '1': lambda: executar_knn(X_train, X_test, y_train, y_test, label_encoder, data_type, best_k=4, best_weights='distance', best_p=1),
-            '2': lambda: executar_random_forest(X_train, X_test, y_train, y_test, label_encoder, data_type, n_estimators=250, max_depth=10, min_samples_split=2),
-            '3': lambda: executar_svm(X_train, X_test, y_train, y_test, label_encoder, data_type, C=10.0, gamma=0.001),
+            '2': lambda: executar_random_forest(X_train, X_test, y_train, y_test, label_encoder, data_type, n_estimators=50, max_depth=7, min_samples_split=2, min_samples_leaf=10),
+            #3s (n_estimators=300, max depth=8, min_samples_leaf=16, min_sample_split=2), 30s (n_estimators=50, max depth=7, min_samples_leaf=10, min_sample_split=2)
+            '3': lambda: executar_svm(X_train, X_test, y_train, y_test, label_encoder, data_type, C=0.8, gamma=0.01), #3s(c=1,gamma=0.005), 30s (c=1,gamma=0.002)
             '4': lambda: executar_xgboost(X_train, X_test, y_train, y_test, label_encoder, scaler, data_type),
             '5': lambda: executar_regressio_logistica(X_train, X_test, y_train, y_test, label_encoder, data_type),
             '6': lambda: executar_decision_tree(X_train, X_test, y_train, y_test, label_encoder, data_type),
@@ -140,8 +140,6 @@ def main():
 
         models_results = []
         if choice == '9':
-            models_results.append(executar_kmeans_clustering(X_train, X_test, y_train, y_test, label_encoder, data_type))
-        elif choice == '10':
             for key, func in model_map_classificacio.items():
                 models_results.append(func())
         elif choice in model_map_classificacio:
@@ -159,7 +157,7 @@ def main():
                     prob_dict[result['model']] = result['probabilities']
                     model_names_list.append(result['model'])
 
-            if choice == '10' and prob_dict:
+            if choice == '9' and prob_dict:
                 plot_comparative_roc(y_test, prob_dict, model_names_list, label_encoder.classes_, data_type)
 
             # TAULA FINAL
@@ -177,6 +175,23 @@ def main():
             else:
                 print(df_results.sort_values(by='f1_score', ascending=False).to_markdown(floatfmt=".4f"))
             print("="*50)
+
+"""
+==================================================
+       ✨ RESUM DE RENDIMENT FINAL (3S) ✨
+==================================================
+| model                         |   accuracy |   train_accuracy |   f1_score |
+|:------------------------------|-----------:|-----------------:|-----------:|
+| SVM (3s)                      |     0.7384 |           0.8660 |     0.7357 |
+| XGBoost (3s)                  |     0.6988 |           0.8067 |     0.6962 |
+| GMM Classifier (3s)           |     0.6933 |           0.9772 |     0.6945 |
+| KNN (3s)                      |     0.6853 |           0.9987 |     0.6871 |
+| Regressió Logística (3s)      |     0.6833 |           0.7528 |     0.6802 |
+| Random Forest (3s)            |     0.6603 |           0.7655 |     0.6520 |
+| Decision Tree (3s)            |     0.5358 |           0.9987 |     0.5369 |
+| Naive Bayes (GaussianNB - 3s) |     0.5258 |           0.5298 |     0.5120 |
+==================================================
+"""
 
 if __name__ == "__main__":
     main()

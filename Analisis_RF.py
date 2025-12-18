@@ -1,128 +1,116 @@
-import matplotlib
-matplotlib.use('Agg') # Evita errores de interfaz gráfica (Tkinter)
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
+from carrega_dades import split_datos_3s, split_datos_30s
 import os
 from sklearn.model_selection import GridSearchCV
-from carrega_dades import split_datos_3s, split_datos_30s
-from plots_2 import plot_single_validation_curve, plot_final_learning_curve
+from plots_2 import plot_final_learning_curve, plot_single_validation_curve
+from sklearn.ensemble import RandomForestClassifier
 
 # --- CONFIGURACIÓN ---
 RANDOM_STATE = 42
-SAVE_DIR = "Plots/Justificacion_Parametros_RF"
+SAVE_DIR = "Plots/Justificacion Parametros RF (30s)"
 os.makedirs(SAVE_DIR, exist_ok=True)
 
-
-# =============================================================================
-# BLOC 1: CERCA EXHAUSTIVA INICIAL (NO EJECUTADA POR DEFECTO)
-# =============================================================================
-
-def run_heavy_grid_search(X, y):
-    """
-    Aquesta funció conté la cerca inicial (45 minuts). 
-    No s'executa per defecte, però es deixa aquí com a evidència del codi utilitzat.
-    """
-    print("\n⚠️  INICIANT CERCA EXHAUSTIVA RF (Pot trigar 45 minuts)...")
-    param_grid = {
-        'n_estimators': [100, 300, 500],
-        'max_depth': [10, 20, 30, None],
-        'min_samples_split': [2, 5, 10],
-        'min_samples_leaf': [1, 2, 4],
-    }
-    model = RandomForestClassifier(random_state=RANDOM_STATE, n_jobs=-1)
-    grid = GridSearchCV(model, param_grid, cv=3, scoring='accuracy', verbose=1, n_jobs=-1)
-    grid.fit(X, y)
-    print(f"Millors paràmetres: {grid.best_params_}")
-    pd.DataFrame(grid.cv_results_).to_csv("gridsearch_results_rf_fase1.csv")
+# Valors optims 3s:  n_estimators=300, max depth=8, min_samples_leaf=16, min_sample_split=2
+# Valors optims 30s: n_estimators=50, max depth=7, min_samples_leaf=10, min_sample_split=2
 
 # =============================================================================
 # MAIN
 # =============================================================================
 def main():
-    print("--- 🔍 GENERANDO JUSTIFICACIÓN DE PARÁMETROS (RANDOM FOREST) ---")
+    print("--- 🔍 GENERANDO JUSTIFICACIÓN DE PARÁMETROS (RANDOM FOREST) SENSE CV ---")
     
-    # 1. Cargar datos
-    X_train, X_test, y_train, y_test, label_encoder, scaler = split_datos_3s(random_state=RANDOM_STATE)
-    
-    # 2. DEFINIR EL MODELO BASE CON TUS PARÁMETROS FIJOS INICIALES
+    # 1. Cargar datos (Utilitzem split_datos_3s com en el teu codi original)
+    #X_train, X_test, y_train, y_test, label_encoder, scaler = split_datos_3s(random_state=RANDOM_STATE)
+    X_train, X_test, y_train, y_test, label_encoder, scaler = split_datos_30s(random_state=RANDOM_STATE)
+    # 2. DEFINIR EL MODELO BASE CON PARÁMETROS FIJOS
     fixed_params = {
         'random_state': RANDOM_STATE,
-        'n_jobs': -2,
+        'n_jobs': -1,
     }
+    
+    # -----------------------------------------------------------------------
+    # 3. ANÀLISI D'HIPERPARÀMETRES SENSE CV
+    # -----------------------------------------------------------------------
+    
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+    axes = axes.flatten()
 
-    # --- GRÁFICA 1: JUSTIFICACIÓN DE MAX_DEPTH ---
-    # Probaremos de 5 a 30 y None.
+    # --- GRÀFICA 1: JUSTIFICACIÓ DE MAX_DEPTH ---
+    # Convertim a np.array per compatibilitat de tipus
+    depth_range = np.array([2, 5, 8, 10, 15, 20, 30]) 
     model_depth = RandomForestClassifier(**fixed_params, n_estimators=50)
     plot_single_validation_curve(
-        model_depth, X_train, y_train, 
+        model_depth, X_train, y_train, X_test, y_test, # <--- PASSEM TEST SET
         param_name="max_depth", 
-        param_range=[0, 5, 10, 15, 20, 30], 
-        title="Impacto de la Profundidad",
+        param_range=depth_range, 
+        title="Impacte de la Profunditat (max_depth)",
         xlabel="Max Depth",
-        SAVE_DIR=SAVE_DIR
-    )
-
-    # ESCOJEMOS 8 COMO VALOR ÓPTIMO ya que ofrece un buen balance entre bias y variance.
-    
-    # --- GRÁFICA 2: JUSTIFICACIÓN DE MIN_SAMPLES_SPLIT ---
-    # Probaremos varios valores. (Debido a gráficas anteriores, fijamos n_estimators=300 y max_depth=10).
-    model_split = RandomForestClassifier(**fixed_params, n_estimators=50, max_depth=8)
-    plot_single_validation_curve(
-        model_split, X_train, y_train,
-        param_name="min_samples_split",
-        param_range=[2, 5, 10, 15, 20],
-        title="Impacto de Min Samples Split",
-        xlabel="Min Samples Split",
-        SAVE_DIR=SAVE_DIR
+        ax=axes[0],
     )
     
-    # ESCOJEMOS 15 COMO VALOR ÓPTIMO.
-
-    # --- GRÁFICA 3: JUSTIFICACIÓN DE MIN_SAMPLES_LEAF ---
-    # Probaremos varios valores. (Debido a gráficas anteriores, fijamos n_estimators=300, max_depth=15 y min_samples_split=5).
-    model_leaf = RandomForestClassifier(**fixed_params, n_estimators=50, max_depth=8, min_samples_split=15)
+    # --- GRÀFICA 2: JUSTIFICACIÓ DE MIN_SAMPLES_LEAF ---
+    leaf_range = np.array([1, 2, 4, 8, 10, 12, 13, 14, 15, 16, 32])
+    model_leaf = RandomForestClassifier(
+        **fixed_params, n_estimators=50, max_depth=7
+    )
     plot_single_validation_curve(
-        model_leaf, X_train, y_train,
+        model_leaf, X_train, y_train, X_test, y_test, # <--- PASSEM TEST SET
         param_name="min_samples_leaf",
-        param_range=[1, 2, 4, 8],
-        title="Impacto de Min Samples Leaf",
-        xlabel="Min Samples Leaf",
-        SAVE_DIR=SAVE_DIR
+        param_range=leaf_range,
+        title="Impacte del Mínim de Mostres per Fulla (min_samples_leaf)",
+        xlabel="Mínim de Mostres per Fulla (min_samples_leaf)",
+        ax=axes[1],
     )
-    
-    # ESCOJEMOS 5 COMO VALOR ÓPTIMO para suavizar ligeramente el modelo.
 
-    # GRAFICA 5: JUSTIFICACIÓN DE N_ESTIMATORS ---
-    # Probaremos varios números de árboles.
-    model_estimators = RandomForestClassifier(**fixed_params)
+    # --- GRÀFICA 3: JUSTIFICACIÓ DE MIN_SAMPLES_SPLIT ---
+    split_range = np.array([2, 5, 10, 15, 20, 50, 100])
+    model_split = RandomForestClassifier(
+        **fixed_params, n_estimators=50, max_depth=7, min_samples_leaf=10
+    )
     plot_single_validation_curve(
-        model_estimators, X_train, y_train,
-        param_name="n_estimators",
-        param_range=[50, 100, 200, 300, 500],
-        title="Impacto del Número de Árboles",
-        xlabel="Número de Estimadores (n_estimators)",
-        SAVE_DIR=SAVE_DIR
+        model_split, X_train, y_train, X_test, y_test, # <--- PASSEM TEST SET
+        param_name="min_samples_split",
+        param_range=split_range,
+        title="Impacte del Mínim de Mostres per Divisió (min_samples_split)",
+        xlabel="Mínim de Mostres per Divisió (min_samples_split)",
+        ax=axes[2],
     )
-    
-    # ESCOJEMOS 50 COMO VALOR ÓPTIMO ya que a partir de ahí la accuracy se estabiliza.
 
-    
-    # --- GRÁFICA FINAL: CURVA DE APRENDIZAJE CON LOS PARÁMETROS ELEGIDOS ---
+    # --- GRÀFICA 4: JUSTIFICACIÓ DE N_ESTIMATORS ---
+    estimators_range = np.array([50, 100, 200, 300, 500])
+    model_estimators = RandomForestClassifier(
+        **fixed_params, max_depth=7, min_samples_split=2, min_samples_leaf=10
+    )
+    plot_single_validation_curve(
+        model_estimators, X_train, y_train, X_test, y_test, # <--- PASSEM TEST SET
+        param_name="n_estimators",
+        param_range=estimators_range,
+        title="Impacte del Número de Árboles (n_estimators)",
+        xlabel="Número de Estimadores (n_estimators)",
+        ax=axes[3],
+    )
+
+    axes[0].legend(loc="best")
+    plt.suptitle("Analisis Parámetros Random Forest", fontsize=16, fontweight="bold")
+    plt.tight_layout()
+
+    plt.savefig(os.path.join(SAVE_DIR, "Justificacion_Parametros_RF.png"))
+    plt.close()
+
+    # --- GRÀFICA FINAL: CURVA DE APRENDIZAJE AMB ELS PARÀMETRES ESCOLLITS ---
     final_model = RandomForestClassifier(
         **fixed_params,
-        n_estimators=50,
-        max_depth=8,
-        min_samples_split=15,
-        min_samples_leaf=5
+        n_estimators=50, # Amb 3s n_estimators=300 i amb 30s n_estimators=50
+        max_depth=7, # Amb 3s max_depth=8 i amb 30s max_depth=7
+        min_samples_split=2, # Amb 3s min_samples_split=2 i amb 30s min_samples_split=2
+        min_samples_leaf=10 # Amb 3s min_samples_leaf=16 i amb 30s min_samples_leaf=10
     )
-    plot_final_learning_curve(final_model, X_train, y_train, "Curva de Aprendizaje Final RF con Parámetros Elegidos", SAVE_DIR=SAVE_DIR)
+    
+    # plot_final_learning_curve es manté amb CV, que és l'estàndard per a aquesta corba.
+    plot_final_learning_curve(final_model, X_train, y_train, "Curva de Aprendizaje Final RF amb Paràmetres Elegits", SAVE_DIR=SAVE_DIR)
 
-    print(f"\n✅ Todos los gráficos guardados en: {SAVE_DIR}")
-
-    #NOTA: La cerca exhaustiva no s'executa per defecte per estalviar temps.
-    #run_heavy_grid_search(X_train, y_train)
+    print(f"\n✅ Tots els gràfics guardats en: {SAVE_DIR}")
 
 if __name__ == "__main__":
     main()
