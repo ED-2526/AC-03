@@ -126,8 +126,8 @@ def executar_random_forest(X_train, X_test, y_train, y_test, label_encoder, data
     print(f"\n🤖 Entrenant {MODEL_NAME} amb n_estimators={n_estimators}, max_depth={max_depth}...")
     
     rf_model = RandomForestClassifier(
-        n_estimators=n_estimators,
-        max_depth=max_depth,
+        n_estimators=300,
+        max_depth=15,
         min_samples_split=min_samples_split,
         min_samples_leaf=min_samples_leaf,
         random_state=42, 
@@ -325,8 +325,8 @@ def executar_xgboost(X_train, X_test, y_train, y_test, label_encoder, scaler, da
         n_jobs=-1,
         use_label_encoder=False,
         early_stopping_rounds=30      # Parar si Test no mejora en 30 rondas
+    
     )
-
     # Pasamos eval_set para que el early_stopping funcione
     xgb_model.fit(
         X_train, y_train,

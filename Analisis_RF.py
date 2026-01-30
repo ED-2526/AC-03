@@ -101,8 +101,8 @@ def main():
     # --- GRÀFICA FINAL: CURVA DE APRENDIZAJE AMB ELS PARÀMETRES ESCOLLITS ---
     final_model = RandomForestClassifier(
         **fixed_params,
-        n_estimators=50, # Amb 3s n_estimators=300 i amb 30s n_estimators=50
-        max_depth=7, # Amb 3s max_depth=8 i amb 30s max_depth=7
+        n_estimators=300, # Amb 3s n_estimators=300 i amb 30s n_estimators=50
+        max_depth=15, # Amb 3s max_depth=8 i amb 30s max_depth=7
         min_samples_split=2, # Amb 3s min_samples_split=2 i amb 30s min_samples_split=2
         min_samples_leaf=10 # Amb 3s min_samples_leaf=16 i amb 30s min_samples_leaf=10
     )

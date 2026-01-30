@@ -15,7 +15,7 @@ def cargar_y_preprocesar_datos_3s(filepath=None):
     # 1. Gestionar ruta automáticamente si no se pasa filepath
     if filepath is None:
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        filepath = os.path.join(current_dir, 'Data', 'features_3_sec.csv')
+        filepath = os.path.join(current_dir, 'Data', 'gtzan_pro_features2.csv')
 
     if not os.path.exists(filepath):
         raise FileNotFoundError(f"No se encontró el archivo en: {filepath}")
@@ -27,10 +27,11 @@ def cargar_y_preprocesar_datos_3s(filepath=None):
     print("🛠️ Extrayendo ID de canción del filename...")
     df['song_id'] = df['filename'].apply(lambda x: x.split('.')[1])
     df['song_group'] = df['label'] + '_' + df['song_id']
+    df = df.dropna()
     groups = df['song_group']
 
     # 3. Separar features y target
-    X = df.drop(columns=['filename', 'length', 'label', 'song_id', 'song_group'])
+    X = df.drop(columns=['filename', 'label','song_id', 'song_group'])
     y = df['label']
 
     # 4. Codificar etiquetas
